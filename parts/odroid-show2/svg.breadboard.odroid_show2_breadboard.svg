@@ -1,0 +1,175 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Hardkernel ODROID-SHOW2, front view. Outline, holes, connectors and parts measured from Hardkernel's
+     dimensioned board render; LCD from the Tianma TM022HDH26 datasheet; pins from the rev 0.1 schematic. -->
+<svg xmlns='http://www.w3.org/2000/svg' width='3.26772in' height='1.88976in' viewBox='0 0 83.0 48.0'>
+<g id='breadboard'>
+<path d='M2.5,0 H80.5 A2.5,2.5 0 0 1 83.0,2.5 V7.0 A1.5,1.5 0 0 1 81.5,8.5 H77.5 A1.5,1.5 0 0 0 76.0,10.0 V32.0 A1.5,1.5 0 0 0 77.5,33.5 H81.5 A1.5,1.5 0 0 1 83.0,35.0 V45.5 A2.5,2.5 0 0 1 80.5,48.0 H2.5 A2.5,2.5 0 0 1 0,45.5 V2.5 A2.5,2.5 0 0 1 2.5,0 Z' fill='#23607a' stroke='#163f50' stroke-width='0.2'/>
+<circle cx='3.4' cy='3.4' r='2.6' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/><circle cx='3.4' cy='3.4' r='1.6' fill='#ffffff' fill-opacity='0.85'/>
+<circle cx='79.6' cy='3.4' r='2.6' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/><circle cx='79.6' cy='3.4' r='1.6' fill='#ffffff' fill-opacity='0.85'/>
+<circle cx='3.4' cy='44.6' r='2.6' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/><circle cx='3.4' cy='44.6' r='1.6' fill='#ffffff' fill-opacity='0.85'/>
+<circle cx='79.6' cy='44.6' r='2.6' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/><circle cx='79.6' cy='44.6' r='1.6' fill='#ffffff' fill-opacity='0.85'/>
+<rect x='20.45' y='0.85' width='55.2' height='40.1' rx='0.6' fill='#e3e4dc' stroke='#b9bab2' stroke-width='0.15'/>
+<rect x='21.3' y='2.5' width='53.2' height='36.8' rx='0.3' fill='#0f0e0c'/>
+<rect x='25.34' y='3.98' width='45.12' height='33.84' fill='#171a1d'/>
+<text x='47.9' y='21.6' font-family='OCRA, Droid Sans Mono, monospace' font-size='1.6' fill='#2c3136' text-anchor='middle'>2.2 in 320 x 240 TFT</text>
+<rect x='8.600' y='21.000' width='7.000' height='7.000' rx='0.2' fill='#2b2b2b' stroke='#111' stroke-width='0.08'/>
+<rect x='8.887' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='8.887' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='21.288' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='21.288' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='9.762' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='9.762' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='22.163' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='22.163' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='10.637' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='10.637' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='23.038' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='23.038' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='11.512' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.512' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='23.913' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='23.913' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='12.387' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='12.387' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='24.788' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='24.788' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='13.262' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='13.262' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='25.663' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='25.663' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='14.137' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='14.137' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='26.538' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='26.538' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.012' y='20.300' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='15.012' y='28.000' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='7.900' y='27.413' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.600' y='27.413' width='0.7' height='0.3' fill='#bfbfbf'/>
+<circle cx='9.300' cy='21.700' r='0.25' fill='#555'/>
+<text x='12.100' y='24.850' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.9' fill='#9a9a9a' text-anchor='middle'>ATMEGA328P</text>
+<rect x='12.000' y='11.600' width='4.000' height='4.000' rx='0.2' fill='#2b2b2b' stroke='#111' stroke-width='0.08'/>
+<rect x='12.183' y='10.900' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='12.183' y='15.600' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.300' y='11.783' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='16.000' y='11.783' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='12.850' y='10.900' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='12.850' y='15.600' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.300' y='12.450' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='16.000' y='12.450' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='13.517' y='10.900' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='13.517' y='15.600' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.300' y='13.117' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='16.000' y='13.117' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='14.183' y='10.900' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='14.183' y='15.600' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.300' y='13.783' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='16.000' y='13.783' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='14.850' y='10.900' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='14.850' y='15.600' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.300' y='14.450' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='16.000' y='14.450' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='15.517' y='10.900' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='15.517' y='15.600' width='0.3' height='0.7' fill='#bfbfbf'/>
+<rect x='11.300' y='15.117' width='0.7' height='0.3' fill='#bfbfbf'/>
+<rect x='16.000' y='15.117' width='0.7' height='0.3' fill='#bfbfbf'/>
+<circle cx='12.700' cy='12.300' r='0.25' fill='#555'/>
+<text x='14.000' y='13.950' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.9' fill='#9a9a9a' text-anchor='middle'>CP2104</text>
+<rect x='16.000' y='6.400' width='1.500' height='3.000' rx='0.2' fill='#2b2b2b' stroke='#111' stroke-width='0.08'/>
+<circle cx='16.700' cy='7.100' r='0.25' fill='#555'/>
+<rect x='6.2' y='33.1' width='11.9' height='5.0' rx='1.2' fill='#c8c8c8' stroke='#8a8a8a' stroke-width='0.1'/>
+<text x='12.15' y='36.0' font-family='OCRA, Droid Sans Mono, monospace' font-size='1.2' fill='#555' text-anchor='middle'>16.000</text>
+<rect x='8.700' y='16.400' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='9.000' y='16.400' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='10.200' y='16.400' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='10.500' y='16.400' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='16.200' y='20.200' width='0.8' height='1.6' fill='#c9c3b6'/>
+<rect x='16.200' y='20.500' width='0.800' height='1.000' fill='#6b5d4f'/>
+<rect x='16.600' y='30.100' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='16.900' y='30.100' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='13.200' y='30.600' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='13.500' y='30.600' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='8.600' y='18.700' width='0.8' height='1.6' fill='#c9c3b6'/>
+<rect x='8.600' y='19.000' width='0.800' height='1.000' fill='#6b5d4f'/>
+<rect x='5.200' y='5.600' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='5.500' y='5.600' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='16.600' y='10.200' width='0.8' height='1.6' fill='#c9c3b6'/>
+<rect x='16.600' y='10.500' width='0.800' height='1.000' fill='#6b5d4f'/>
+<rect x='12.200' y='17.100' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='12.500' y='17.100' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='14.700' y='7.600' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='15.000' y='7.600' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='18.600' y='11.700' width='0.8' height='1.6' fill='#c9c3b6'/>
+<rect x='18.600' y='12.000' width='0.800' height='1.000' fill='#6b5d4f'/>
+<rect x='8.000' y='13.200' width='1.6' height='0.8' fill='#c9c3b6'/>
+<rect x='8.300' y='13.200' width='1.000' height='0.800' fill='#6b5d4f'/>
+<rect x='7.8' y='-0.6' width='7.5' height='6.1' rx='0.4' fill='#b8b8b8' stroke='#7a7a7a' stroke-width='0.12'/>
+<rect x='9.0' y='0.4' width='5.1' height='1.4' rx='0.3' fill='#3a3a3a'/>
+<rect x='7.0' y='40.6' width='9.4' height='5.5' rx='0.3' fill='#5e564e' stroke='#3a352f' stroke-width='0.1'/>
+<rect x='12.2' y='41.6' width='2.6' height='2.2' fill='#d8d8d8'/>
+<text x='7.4' y='39.9' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.9' fill='#f2f2ee'>OFF</text><text x='14.4' y='39.9' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.9' fill='#f2f2ee'>ON</text>
+<rect x='22.3' y='42.2' width='4.0' height='4.0' rx='0.3' fill='#c0c0c0' stroke='#888' stroke-width='0.1'/><circle cx='24.3' cy='44.2' r='1.15' fill='#2a2a2a'/>
+<text x='24.3' y='41.6' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>RESET</text>
+<rect x='30.500' y='44.9' width='1.6' height='0.8' fill='#e8463b' stroke='#555' stroke-width='0.05'/>
+<text x='31.300' y='44.3' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.75' fill='#f2f2ee' text-anchor='middle'>PD3</text>
+<rect x='34.700' y='44.9' width='1.6' height='0.8' fill='#3fbf5a' stroke='#555' stroke-width='0.05'/>
+<text x='35.500' y='44.3' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.75' fill='#f2f2ee' text-anchor='middle'>PD4</text>
+<rect x='38.900' y='44.9' width='1.6' height='0.8' fill='#3b7be8' stroke='#555' stroke-width='0.05'/>
+<text x='39.700' y='44.3' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.75' fill='#f2f2ee' text-anchor='middle'>PD6</text>
+<rect x='45.600' y='44.2' width='6.0' height='3.5' rx='0.3' fill='#dedac8' stroke='#9a978a' stroke-width='0.1'/>
+<rect x='47.400' y='44.9' width='2.4' height='2.1' rx='0.4' fill='#bdb9a8'/>
+<text x='48.600' y='43.5' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>PD7</text>
+<rect x='54.200' y='44.2' width='6.0' height='3.5' rx='0.3' fill='#dedac8' stroke='#9a978a' stroke-width='0.1'/>
+<rect x='56.000' y='44.9' width='2.4' height='2.1' rx='0.4' fill='#bdb9a8'/>
+<text x='57.200' y='43.5' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>PC0</text>
+<rect x='62.800' y='44.2' width='6.0' height='3.5' rx='0.3' fill='#dedac8' stroke='#9a978a' stroke-width='0.1'/>
+<rect x='64.600' y='44.9' width='2.4' height='2.1' rx='0.4' fill='#bdb9a8'/>
+<text x='65.800' y='43.5' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>PC1</text>
+<rect x='6.9' y='14.6' width='1.6' height='0.8' fill='#3fbf5a' stroke='#555' stroke-width='0.05'/>
+<rect x='1.61' y='7.74' width='7.62' height='5.08' rx='0.2' fill='#262722'/>
+<rect x='16.69' y='0.59' width='2.54' height='5.08' rx='0.2' fill='#262722'/>
+<rect x='1.83' y='23.93' width='2.54' height='15.24' rx='0.2' fill='#444f50'/>
+<rect x='1.0' y='14.6' width='4.6' height='7.8' rx='0.3' fill='#e9e1c8' stroke='#b5a983' stroke-width='0.12'/>
+<rect x='1.0' y='15.6' width='1.2' height='4.1' fill='#c8b78d'/>
+<text transform='translate(6.9,18.5) rotate(90)' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>BATTERY</text>
+<text x='1.6' y='14.1' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>+</text>
+<text x='5.3' y='7.2' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>ISP</text>
+<text x='16.3' y='3.4' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.75' fill='#f2f2ee' text-anchor='end'>DTR</text>
+<text x='3.1' y='23.4' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee' text-anchor='middle'>P2</text>
+<circle id='connector0pin' cx='3.100' cy='25.200' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.780' y='24.880' width='0.64' height='0.64' fill='#8c8c8c'/>
+<text x='4.55' y='25.500' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>GND</text>
+<circle id='connector1pin' cx='3.100' cy='27.740' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.780' y='27.420' width='0.64' height='0.64' fill='#8c8c8c'/>
+<text x='4.55' y='28.040' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>INT0</text>
+<circle id='connector2pin' cx='3.100' cy='30.280' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.780' y='29.960' width='0.64' height='0.64' fill='#8c8c8c'/>
+<text x='4.55' y='30.580' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>ADC3</text>
+<circle id='connector3pin' cx='3.100' cy='32.820' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.780' y='32.500' width='0.64' height='0.64' fill='#8c8c8c'/>
+<text x='4.55' y='33.120' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>SDA</text>
+<circle id='connector4pin' cx='3.100' cy='35.360' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.780' y='35.040' width='0.64' height='0.64' fill='#8c8c8c'/>
+<text x='4.55' y='35.660' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>SCL</text>
+<circle id='connector5pin' cx='3.100' cy='37.900' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.780' y='37.580' width='0.64' height='0.64' fill='#8c8c8c'/>
+<text x='4.55' y='38.200' font-family='OCRA, Droid Sans Mono, monospace' font-size='0.8' fill='#f2f2ee'>P3V45</text>
+<circle id='connector6pin' cx='2.880' cy='11.550' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.560' y='11.230' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector7pin' cx='2.880' cy='9.010' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='2.560' y='8.690' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector8pin' cx='5.420' cy='11.550' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='5.100' y='11.230' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector9pin' cx='5.420' cy='9.010' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='5.100' y='8.690' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector10pin' cx='7.960' cy='11.550' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='7.640' y='11.230' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector11pin' cx='7.960' cy='9.010' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='7.640' y='8.690' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector12pin' cx='17.960' cy='1.860' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='17.640' y='1.540' width='0.64' height='0.64' fill='#8c8c8c'/>
+<circle id='connector13pin' cx='17.960' cy='4.400' r='0.85' fill='#d6b052' stroke='#9c7a2a' stroke-width='0.1'/>
+<rect x='17.640' y='4.080' width='0.64' height='0.64' fill='#8c8c8c'/>
+<rect id='connector14pin' x='0.600' y='16.250' width='0.8' height='0.8' fill='#d6b052'/>
+<rect id='connector15pin' x='0.600' y='18.250' width='0.8' height='0.8' fill='#d6b052'/>
+</g>
+</svg>

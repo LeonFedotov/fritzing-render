@@ -128,6 +128,22 @@ private Q_SLOTS:
 		QVERIFY(qAbs(swclk.x() - vdd.x() - 54) < 0.01);  // rows 0.6 in apart
 	}
 
+	void ownPartsIncludeTheOdroidShow2() {
+		qunsetenv("FRITZING_PARTS");
+		const QStringList roots = partlib::defaultRoots();
+		const QString path = partlib::resolve(roots, partlib::index(roots), "HardkernelOdroidShow2ModuleID");
+		QVERIFY2(!path.isEmpty(), "ODROID-SHOW2 part not found");
+		const render::LoadedPart lp = render::loadPart(path);
+		QVERIFY2(lp.error.isEmpty(), qPrintable(lp.error));
+		QCOMPARE(lp.connectors.size(), 16);
+		QVERIFY(qAbs(lp.size.width() - 83 / 25.4 * 90) < 0.1);  // 83 x 48 mm
+		for (const auto & c : lp.connectors) QVERIFY2(c.found, qPrintable(c.name));
+		// the I/O header P2: GND (connector0) to P3V45 (connector5), 0.1 in apart
+		QVERIFY(qAbs(lp.connectors[5].local.y() - lp.connectors[0].local.y() - 45) < 0.01);
+		QVERIFY(fzp::findConnector(lp.part, "INT0") != nullptr);
+		QVERIFY(fzp::findConnector(lp.part, "BAT+") != nullptr);
+	}
+
 	void refIsRelativeToItsRoot() {
 		QCOMPARE(partlib::ref(FixtureRoots, Fixtures + "/parts/core/testpart.fzp"), QString("core/testpart.fzp"));
 		QCOMPARE(partlib::ref(FixtureRoots, Fixtures + "/fzpz/part.flat.fzp"), QString("part.flat.fzp"));

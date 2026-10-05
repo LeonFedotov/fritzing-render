@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns='http://www.w3.org/2000/svg' width='1.10in' height='0.90in' viewBox='0 0 110 90'>
+<g id='schematic'>
+<rect x='10' y='0' width='90' height='90' fill='none' stroke='#000' stroke-width='1'/>
+<text x='55.0' y='7' font-family='Droid Sans' font-size='7' text-anchor='middle'>ODROID-SHOW2</text>
+<line id='connector5pin' x1='0' y1='10' x2='10' y2='10' stroke='#000' stroke-width='1'/>
+<rect id='connector5terminal' x='0' y='9.5' width='1' height='1' fill='none'/>
+<text x='12' y='12.5' font-family='Droid Sans' font-size='7' text-anchor='start'>P3V45</text>
+<line id='connector0pin' x1='0' y1='20' x2='10' y2='20' stroke='#000' stroke-width='1'/>
+<rect id='connector0terminal' x='0' y='19.5' width='1' height='1' fill='none'/>
+<text x='12' y='22.5' font-family='Droid Sans' font-size='7' text-anchor='start'>GND</text>
+<line id='connector14pin' x1='0' y1='30' x2='10' y2='30' stroke='#000' stroke-width='1'/>
+<rect id='connector14terminal' x='0' y='29.5' width='1' height='1' fill='none'/>
+<text x='12' y='32.5' font-family='Droid Sans' font-size='7' text-anchor='start'>BAT+</text>
+<line id='connector15pin' x1='0' y1='40' x2='10' y2='40' stroke='#000' stroke-width='1'/>
+<rect id='connector15terminal' x='0' y='39.5' width='1' height='1' fill='none'/>
+<text x='12' y='42.5' font-family='Droid Sans' font-size='7' text-anchor='start'>BAT-</text>
+<line id='connector12pin' x1='0' y1='50' x2='10' y2='50' stroke='#000' stroke-width='1'/>
+<rect id='connector12terminal' x='0' y='49.5' width='1' height='1' fill='none'/>
+<text x='12' y='52.5' font-family='Droid Sans' font-size='7' text-anchor='start'>DTR</text>
+<line id='connector13pin' x1='0' y1='60' x2='10' y2='60' stroke='#000' stroke-width='1'/>
+<rect id='connector13terminal' x='0' y='59.5' width='1' height='1' fill='none'/>
+<text x='12' y='62.5' font-family='Droid Sans' font-size='7' text-anchor='start'>RESET_C</text>
+<line id='connector7pin' x1='0' y1='70' x2='10' y2='70' stroke='#000' stroke-width='1'/>
+<rect id='connector7terminal' x='0' y='69.5' width='1' height='1' fill='none'/>
+<text x='12' y='72.5' font-family='Droid Sans' font-size='7' text-anchor='start'>P3V45</text>
+<line id='connector11pin' x1='0' y1='80' x2='10' y2='80' stroke='#000' stroke-width='1'/>
+<rect id='connector11terminal' x='0' y='79.5' width='1' height='1' fill='none'/>
+<text x='12' y='82.5' font-family='Droid Sans' font-size='7' text-anchor='start'>GND</text>
+<line id='connector1pin' x1='100' y1='10' x2='110' y2='10' stroke='#000' stroke-width='1'/>
+<rect id='connector1terminal' x='109' y='9.5' width='1' height='1' fill='none'/>
+<text x='98' y='12.5' font-family='Droid Sans' font-size='7' text-anchor='end'>INT0</text>
+<line id='connector2pin' x1='100' y1='20' x2='110' y2='20' stroke='#000' stroke-width='1'/>
+<rect id='connector2terminal' x='109' y='19.5' width='1' height='1' fill='none'/>
+<text x='98' y='22.5' font-family='Droid Sans' font-size='7' text-anchor='end'>ADC3</text>
+<line id='connector3pin' x1='100' y1='30' x2='110' y2='30' stroke='#000' stroke-width='1'/>
+<rect id='connector3terminal' x='109' y='29.5' width='1' height='1' fill='none'/>
+<text x='98' y='32.5' font-family='Droid Sans' font-size='7' text-anchor='end'>SDA</text>
+<line id='connector4pin' x1='100' y1='40' x2='110' y2='40' stroke='#000' stroke-width='1'/>
+<rect id='connector4terminal' x='109' y='39.5' width='1' height='1' fill='none'/>
+<text x='98' y='42.5' font-family='Droid Sans' font-size='7' text-anchor='end'>SCL</text>
+<line id='connector6pin' x1='100' y1='50' x2='110' y2='50' stroke='#000' stroke-width='1'/>
+<rect id='connector6terminal' x='109' y='49.5' width='1' height='1' fill='none'/>
+<text x='98' y='52.5' font-family='Droid Sans' font-size='7' text-anchor='end'>MISO</text>
+<line id='connector9pin' x1='100' y1='60' x2='110' y2='60' stroke='#000' stroke-width='1'/>
+<rect id='connector9terminal' x='109' y='59.5' width='1' height='1' fill='none'/>
+<text x='98' y='62.5' font-family='Droid Sans' font-size='7' text-anchor='end'>MOSI</text>
+<line id='connector8pin' x1='100' y1='70' x2='110' y2='70' stroke='#000' stroke-width='1'/>
+<rect id='connector8terminal' x='109' y='69.5' width='1' height='1' fill='none'/>
+<text x='98' y='72.5' font-family='Droid Sans' font-size='7' text-anchor='end'>SCK</text>
+<line id='connector10pin' x1='100' y1='80' x2='110' y2='80' stroke='#000' stroke-width='1'/>
+<rect id='connector10terminal' x='109' y='79.5' width='1' height='1' fill='none'/>
+<text x='98' y='82.5' font-family='Droid Sans' font-size='7' text-anchor='end'>RESET</text>
+</g>
+</svg>

@@ -276,3 +276,11 @@ app.
   five pads on the underside's bottom edge.
 
 ![RedBear BLE Nano v1.5](examples/ble-nano.png)
+
+- **Hardkernel ODROID-SHOW2** (`HardkernelOdroidShow2ModuleID`): outline,
+  holes, connectors and parts measured from Hardkernel's dimensioned board
+  render, the LCD from the Tianma TM022HDH26 datasheet, pins from the rev 0.1
+  schematic. Connectors: the I/O header P2 (P3V45, SCL, SDA, ADC3, INT0,
+  GND), the ISP header, the DTR jumper and the battery connector.
+
+![ODROID-SHOW2](examples/odroid-show2-part.png)
