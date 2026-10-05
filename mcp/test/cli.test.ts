@@ -85,6 +85,14 @@ test('search, describe and render through the real binary', { skip: !haveBinary 
   assert.match(out.svg, /<svg/)
 })
 
+test('wire ends can be spots on a part or scene points', { skip: !haveBinary && 'build first' }, async () => {
+  const out = await renderDiagram(bin, {
+    parts: [{ id: 'mcu', part: 'core/Arduino Nano3(fix).fzp', x: 0, y: 0 }],
+    wires: [{ from: { part: 'mcu', at: [10, 10] }, to: [200, 10], color: '#123456' }],
+  }, { ppi: 60 })
+  assert.match(out.svg, /stroke='#123456'/)
+})
+
 test('render errors come back as messages, not crashes', { skip: !haveBinary && 'build first' }, async () => {
   await assert.rejects(
     renderDiagram(bin, { parts: [{ id: 'mcu', part: 'core/Arduino Nano3(fix).fzp' }], wires: [{ from: 'mcu.D99', to: 'mcu.D2' }] }, {}),

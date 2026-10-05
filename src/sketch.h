@@ -22,6 +22,9 @@
 //
 // "part" is an .fzp path (absolute or relative to a library root), a
 // moduleId or an exact title. Connectors are "<part id>.<connector id or name>".
+// A wire end can also be a spot on a part, {"part": "a", "at": [x, y]} in
+// the part's own coordinates (for a bodge wire to a chip's pin, say), or a
+// scene point [x, y].
 // "color" is a Fritzing wire color name (blue, red, black, yellow, green,
 // grey, white, orange, ochre, cyan, brown, purple, pink) or #rrggbb.
 //
@@ -74,6 +77,12 @@ struct WireSpec {
 	QString to;
 	QString color = "blue";
 	QList<QPointF> via;
+	// Point ends in place of connectors: on part fromPart/toPart (part
+	// coordinates), or in the scene when that is empty.
+	std::optional<QPointF> fromAt;
+	std::optional<QPointF> toAt;
+	QString fromPart;
+	QString toPart;
 	// From a .fz: fixed scene end points in place of from/to/via, the
 	// Bézier control points of a curved wire (else empty), and the width.
 	bool fixed = false;

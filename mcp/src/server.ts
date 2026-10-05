@@ -101,6 +101,9 @@ server.registerTool(
 )
 
 const point = z.tuple([z.number(), z.number()])
+const wireEnd = z
+  .union([z.string(), z.object({ part: z.string(), at: point }), point])
+  .describe('"<part id>.<connector>", or {part, at: [x, y]} for a spot on a part in its own coordinates (e.g. a bodge wire to a chip pin), or a scene point [x, y]')
 
 server.registerTool(
   'render_diagram',
@@ -131,8 +134,8 @@ server.registerTool(
         .min(1),
       wires: z
         .array(z.object({
-          from: z.string().describe('e.g. "mcu.D2"'),
-          to: z.string(),
+          from: wireEnd,
+          to: wireEnd,
           color: z.string().default('blue'),
           via: z.array(point).optional().describe('bend points, scene units'),
         }))

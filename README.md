@@ -215,7 +215,7 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 - `generic` instead of `part` draws a labelled block with 0.1 in header pins along its bottom, for parts no library has.
 - `label` draws text above the part (`labelBelow: true` puts it under).
 - `color` recolors a part's `color_*` elements, as Fritzing does for LEDs: a Fritzing LED color (`"Green (555nm)"`), a word (`green`: Fritzing's default shade) or `#rrggbb`.
-- Wire ends are `<part id>.<connector name or id>`; `via` adds bend points.
+- Wire ends are `<part id>.<connector name or id>`; `via` adds bend points. An end can also be a spot on a part, `{ "part": "show2", "at": [47.5, 72.3] }` in the part's own coordinates (it moves and turns with the part, e.g. a bodge wire to a chip's pin), or a scene point `[x, y]`.
 - A wire's `color` is a Fritzing wire color (blue, red, black, yellow, green, grey, white, orange, ochre, cyan, brown, purple, pink) or `#rrggbb`.
 
 ## MCP server

@@ -371,6 +371,18 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		return QString("%1.%2 not found").arg(id, con);
 	};
 
+	// A connector, a spot on a part, or a scene point.
+	auto end = [&](const QString & ref, const QString & part, const std::optional<QPointF> & at, QPointF & out) -> QString {
+		if (!at) return endpoint(ref, out);
+		if (part.isEmpty()) {
+			out = *at;
+			return {};
+		}
+		if (!placed.contains(part)) return QString("no part with id \"%1\"").arg(part);
+		out = placed[part].toScene.map(*at);
+		return {};
+	};
+
 	struct Line {
 		QList<QPointF> points;
 		QPolygonF curve;  // a curved wire's control points
@@ -385,8 +397,8 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 			continue;
 		}
 		QPointF a, b;
-		QString err = endpoint(w.from, a);
-		if (err.isEmpty()) err = endpoint(w.to, b);
+		QString err = end(w.from, w.fromPart, w.fromAt, a);
+		if (err.isEmpty()) err = end(w.to, w.toPart, w.toAt, b);
 		if (!err.isEmpty()) {
 			result.error = QString("wire %1 -> %2: %3").arg(w.from, w.to, err);
 			return result;

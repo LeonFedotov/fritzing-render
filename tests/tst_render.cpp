@@ -192,6 +192,31 @@ private Q_SLOTS:
 		QVERIFY(sketch::parse(J("{'parts':[{'id':'g','generic':{'title':'x','pins':[]}}]}")).error.contains("pins"));
 	}
 
+	void wireEndsCanBePointsOnAPartOrInTheScene() {
+		// {"part": id, "at": [x, y]}: a spot on a part (part coordinates, so it
+		// follows the part's placement and rotation); [x, y]: a scene point.
+		const auto parsed = sketch::parse(J("{'margin':0,'parts':[{'id':'a','part':'core/testpart.fzp','x':100,'rotate':90}],"
+		                                    "'wires':[{'from':{'part':'a','at':[4.5,14.4]},'to':[0,0],'color':'#123456'}]}"));
+		QVERIFY2(parsed.error.isEmpty(), qPrintable(parsed.error));
+		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		// (4.5, 14.4) turned about (18, 9) -> (12.6, -4.5), at x 100 -> (112.6, -4.5);
+		// the scene starts at the turned body's top (-9) and the point (0, 0) less 3
+		const QList<double> l = firstLine(r.svg, "#123456");
+		QVERIFY(qAbs(l[0] - (112.6 + 3) * 1000 / 90) < 0.01);
+		QVERIFY(qAbs(l[1] - (-4.5 + 9) * 1000 / 90) < 0.01);
+		QVERIFY(qAbs(l[2] - 3.0 * 1000 / 90) < 0.01);
+		QVERIFY(qAbs(l[3] - 9.0 * 1000 / 90) < 0.01);
+	}
+
+	void wireEndPointsAreChecked() {
+		QVERIFY(sketch::parse(J("{'parts':[{'id':'a','part':'x'}],'wires':[{'from':{'part':'a'},'to':'a.IN'}]}")).error.contains("at"));
+		QVERIFY(sketch::parse(J("{'parts':[{'id':'a','part':'x'}],'wires':[{'from':[1],'to':'a.IN'}]}")).error.contains("[x, y]"));
+		const auto parsed = sketch::parse(J("{'parts':[{'id':'a','part':'core/testpart.fzp'}],'wires':[{'from':{'part':'b','at':[0,0]},'to':'a.IN'}]}"));
+		QVERIFY2(parsed.error.isEmpty(), qPrintable(parsed.error));
+		QVERIFY(render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots)).error.contains("no part with id \"b\""));
+	}
+
 	void genericPartHasPinsAlongTheBottomAtHeaderPitch() {
 		const render::LoadedPart lp = render::genericPart({"BLE Nano relay", {"TX", "GND", "VIN"}});
 		QVERIFY(lp.error.isEmpty());

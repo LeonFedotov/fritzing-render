@@ -35,6 +35,9 @@ export type PartInfo = {
   connectors: ConnectorInfo[]
 }
 
+// "<part id>.<connector>", a spot on a part (part coordinates) or a scene point.
+export type WireEnd = string | { part: string, at: [number, number] } | [number, number]
+
 export type Sketch = {
   parts: {
     id: string
@@ -47,7 +50,7 @@ export type Sketch = {
     labelBelow?: boolean
     color?: string
   }[]
-  wires?: { from: string, to: string, color?: string, via?: [number, number][] }[]
+  wires?: { from: WireEnd, to: WireEnd, color?: string, via?: [number, number][] }[]
   margin?: number
 }
 
