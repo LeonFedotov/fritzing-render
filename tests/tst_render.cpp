@@ -106,7 +106,8 @@ private Q_SLOTS:
 		qunsetenv("FRITZING_PARTS");
 		QStringList names;
 		for (const QString & root : partlib::defaultRoots()) names << QFileInfo(root).fileName();
-		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "seeed-parts", "mgesteiro-parts", "community-parts", "fritzing-parts-extra"}));
+		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "seeed-parts", "mgesteiro-parts", "dip-ic-parts", "elegoo-parts",
+		                         "community-parts", "fritzing-parts-extra"}));
 	}
 
 	void ownPartsAreInTheLibrary() {
@@ -332,6 +333,17 @@ private Q_SLOTS:
 		const auto parsed = sketch::parse(J("{'parts':[{'id':'a','part':'core/nothing.fzp'}]}"));
 		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
 		QVERIFY(r.error.contains("no part matches"));
+	}
+
+	void rasterizeDrawsDeeplyNestedDrawings() {
+		// Qt's SVG renderer drops elements nested deeper than 32 unless the
+		// source is trusted; some library parts nest deeper than that.
+		QString svg = "<svg xmlns='http://www.w3.org/2000/svg' width='0.1in' height='0.1in' viewBox='0 0 100 100'>";
+		for (int i = 0; i < 40; i++) svg += "<g>";
+		svg += "<rect x='0' y='0' width='100' height='100' fill='#ff0000'/>";
+		for (int i = 0; i < 40; i++) svg += "</g>";
+		svg += "</svg>";
+		QCOMPARE(QColor(render::rasterize(svg, QSizeF(9, 9), 90, false).pixel(4, 4)), QColor("#ff0000"));
 	}
 
 	void rasterizeHasTheSketchSizeAtThePpi() {

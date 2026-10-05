@@ -199,6 +199,9 @@ int cmdRender(QStringList args) {
 int main(int argc, char * argv[]) {
 	// No window system needed: Qt's offscreen platform still gives fonts and painting.
 	if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) qputenv("QT_QPA_PLATFORM", "offscreen");
+	// Trust part drawings (QtSvg::AssumeTrustedSource) in Fritzing's own SVG
+	// loading too, so deeply nested ones keep their connectors.
+	if (qEnvironmentVariableIsEmpty("QT_SVG_DEFAULT_OPTIONS")) qputenv("QT_SVG_DEFAULT_OPTIONS", "2");
 	// Font fallbacks, and part drawings Qt's SVG renderer finds fault with, are not the user's to fix.
 	if (qEnvironmentVariableIsEmpty("QT_LOGGING_RULES")) qputenv("QT_LOGGING_RULES", "qt.qpa.fonts=false;qt.svg=false");
 	QApplication app(argc, argv);

@@ -18,8 +18,8 @@ docker pull ghcr.io/leonfedotov/fritzing-render
 ```
 
 For linux/amd64 and linux/arm64, with Fritzing's core parts (obsolete ones
-too, for old sketches), Adafruit's, SparkFun's and mgesteiro's libraries and
-the community parts listed under [Licence](#licence). (Seeed's library is
+too, for old sketches), the libraries under `libraries/` (Adafruit, SparkFun,
+mgesteiro, DIP ICs, Elegoo) and the community parts listed under [Licence](#licence). (Seeed's library is
 used by local builds but left out of the image: it states no licence.)
 With no arguments it runs the MCP server on stdio; `render`, `search` and
 `part` run the CLI, in `/work`:
@@ -186,8 +186,8 @@ The breadboard and schematic views are rendered; the PCB view is not, yet.
 
 ## Build
 
-Clone with `--recurse-submodules`: Adafruit's, SparkFun's, Seeed's and
-mgesteiro's Fritzing libraries and fritzing-parts-extra are submodules under `libraries/`
+Clone with `--recurse-submodules`: the parts libraries (Adafruit, SparkFun,
+Seeed, mgesteiro, DIP ICs, Elegoo, fritzing-parts-extra) are submodules under `libraries/`
 (`fetch-vendor.sh` initializes them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
 reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 (or `-DFRITZING_APP=...`). Or build the image: `docker build -t fritzing-render .`
@@ -286,6 +286,8 @@ including the examples here, are under their own terms:
 - [sparkfun/Fritzing_Parts](https://github.com/sparkfun/Fritzing_Parts): CC BY-SA 4.0, submodule
 - [Seeed-Studio/fritzing_parts](https://github.com/Seeed-Studio/fritzing_parts) (XIAO, Grove, Wio, LoRa-E5): no stated licence, submodule; not in the Docker image
 - [mgesteiro/fritzing-parts](https://github.com/mgesteiro/fritzing-parts) (SCD30, VL53L0X, 28BYJ-48, NodeMCU v3, ...): CC BY-SA 4.0, submodule
+- [Adr-hyng/74LS-Series-Fritzing-Parts](https://github.com/Adr-hyng/74LS-Series-Fritzing-Parts) (74LS-series and other DIP ICs): CC BY-SA 3.0, submodule
+- [marcinwisniowski/ElegooFritzingBin](https://github.com/marcinwisniowski/ElegooFritzingBin) (KY-0xx sensor modules, 28BYJ-48, MAX7219): MIT, submodule
 - [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
 - [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
 - DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched

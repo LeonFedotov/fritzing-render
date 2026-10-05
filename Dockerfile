@@ -22,6 +22,8 @@ COPY scripts/fetch-vendor.sh scripts/prune-vendor.sh scripts/
 COPY libraries/adafruit/parts libraries/adafruit/parts
 COPY libraries/sparkfun/products libraries/sparkfun/products
 COPY libraries/mgesteiro libraries/mgesteiro
+COPY libraries/dip-ics libraries/dip-ics
+COPY libraries/elegoo/bin libraries/elegoo/bin
 # libraries/seeed is left out: its repository states no licence to redistribute it.
 RUN scripts/fetch-vendor.sh && scripts/prune-vendor.sh
 

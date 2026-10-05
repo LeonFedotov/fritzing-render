@@ -674,7 +674,11 @@ QImage rasterize(const QString & svg, QSizeF sceneSize, double ppi, bool transpa
 	const QSize px(qRound(sceneSize.width() / SceneDpi * ppi), qRound(sceneSize.height() / SceneDpi * ppi));
 	QImage image(px, QImage::Format_ARGB32_Premultiplied);
 	image.fill(transparent ? Qt::transparent : Qt::white);
-	QSvgRenderer renderer(svg.toUtf8());
+	// Part drawings come from parts libraries, and some nest deeper than Qt's
+	// default limit for untrusted SVG, which would drop what lies below it.
+	QSvgRenderer renderer;
+	renderer.setOptions(QtSvg::Option::AssumeTrustedSource);
+	renderer.load(svg.toUtf8());
 	QPainter painter(&image);
 	painter.setRenderHint(QPainter::Antialiasing);
 	renderer.render(&painter);
