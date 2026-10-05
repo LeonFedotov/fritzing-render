@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns='http://www.w3.org/2000/svg' width='0.72835in' height='0.82232in' viewBox='0 0 18.5 20.887'>
+<g id='silkscreen'><rect x='0.05' y='0.05' width='18.4' height='20.787' rx='1.45' fill='none' stroke='#000' stroke-width='0.1'/></g>
+<g id='copper0'>
+<circle id='connector0pad' cx='1.630' cy='3.829' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector1pad' cx='1.630' cy='6.369' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector2pad' cx='1.630' cy='8.909' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector3pad' cx='1.630' cy='11.449' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector4pad' cx='1.630' cy='13.989' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector5pad' cx='1.630' cy='16.529' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector6pad' cx='16.870' cy='3.829' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector7pad' cx='16.870' cy='6.369' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector8pad' cx='16.870' cy='8.909' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector9pad' cx='16.870' cy='11.449' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector10pad' cx='16.870' cy='13.989' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector11pad' cx='16.870' cy='16.529' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<rect id='connector12pad' x='3.570' y='16.469' width='1.2' height='2' fill='#F7BD13'/>
+<rect id='connector13pad' x='6.110' y='16.469' width='1.2' height='2' fill='#F7BD13'/>
+<rect id='connector14pad' x='8.650' y='16.469' width='1.2' height='2' fill='#F7BD13'/>
+<rect id='connector15pad' x='11.190' y='16.469' width='1.2' height='2' fill='#F7BD13'/>
+<rect id='connector16pad' x='13.730' y='16.469' width='1.2' height='2' fill='#F7BD13'/>
+</g>
+<g id='copper1'>
+<circle id='connector0pad' cx='1.630' cy='3.829' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector1pad' cx='1.630' cy='6.369' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector2pad' cx='1.630' cy='8.909' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector3pad' cx='1.630' cy='11.449' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector4pad' cx='1.630' cy='13.989' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector5pad' cx='1.630' cy='16.529' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector6pad' cx='16.870' cy='3.829' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector7pad' cx='16.870' cy='6.369' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector8pad' cx='16.870' cy='8.909' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector9pad' cx='16.870' cy='11.449' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector10pad' cx='16.870' cy='13.989' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+<circle id='connector11pad' cx='16.870' cy='16.529' r='0.675' fill='none' stroke='#F7BD13' stroke-width='0.45'/>
+</g>
+</svg>

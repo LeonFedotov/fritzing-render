@@ -260,3 +260,19 @@ including the examples here, are under their own terms:
 - [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
 - [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
 - DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched
+- [`parts/`](parts): parts made here, CC BY-SA 4.0 (below)
+
+## Parts made here
+
+[`parts/`](parts) holds parts no library has, drawn from their makers'
+published design files; it is searched with the other libraries. Each
+folder is an unpacked `.fzpz`: zip its files to use the part in the Fritzing
+app.
+
+- **RedBear BLE Nano v1.5** (`RedBearBLENanoV1_5ModuleID`): pads, holes and
+  outline from RedBear's v1.5 gerbers and DXF, pin names from its pinout and
+  silkscreen ([redbear/nRF5x](https://github.com/redbear/nRF5x)). Two rows of
+  six header pins 0.6 in apart, so it straddles a breadboard's gap, plus the
+  five pads on the underside's bottom edge.
+
+![RedBear BLE Nano v1.5](examples/ble-nano.png)

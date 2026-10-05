@@ -105,7 +105,27 @@ private Q_SLOTS:
 		qunsetenv("FRITZING_PARTS");
 		QStringList names;
 		for (const QString & root : partlib::defaultRoots()) names << QFileInfo(root).fileName();
-		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "community-parts"}));
+		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "community-parts", "parts"}));
+	}
+
+	void ownPartsAreInTheLibrary() {
+		// parts/ holds parts made here, e.g. the RedBear BLE Nano v1.5 from RedBear's gerbers.
+		qunsetenv("FRITZING_PARTS");
+		const QStringList roots = partlib::defaultRoots();
+		const QString path = partlib::resolve(roots, partlib::index(roots), "RedBearBLENanoV1_5ModuleID");
+		QVERIFY2(!path.isEmpty(), "BLE Nano part not found");
+		const render::LoadedPart lp = render::loadPart(path);
+		QVERIFY2(lp.error.isEmpty(), qPrintable(lp.error));
+		QCOMPARE(lp.connectors.size(), 17);
+		QPointF vdd, gnd, swclk;
+		for (const auto & c : lp.connectors) {
+			QVERIFY(c.found);
+			if (c.id == "connector0") vdd = c.local;
+			if (c.id == "connector5") gnd = c.local;
+			if (c.id == "connector6") swclk = c.local;
+		}
+		QVERIFY(qAbs(gnd.y() - vdd.y() - 45) < 0.01);    // six pins, 0.1 in apart
+		QVERIFY(qAbs(swclk.x() - vdd.x() - 54) < 0.01);  // rows 0.6 in apart
 	}
 
 	void refIsRelativeToItsRoot() {

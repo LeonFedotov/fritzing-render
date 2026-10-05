@@ -1,0 +1,8 @@
+{"parts":[
+ {"id":"bb","part":"core/Half_breadboard_v2.fzp","x":0,"y":0},
+ {"id":"nano","part":"RedBearBLENanoV1_5ModuleID","x":92.47,"y":52.98,"rotate":90}
+],
+"wires":[
+ {"from":"nano.VIN","to":"bb.pin12A","color":"red"},
+ {"from":"nano.GND","to":"bb.pin11J","color":"black"}
+]}

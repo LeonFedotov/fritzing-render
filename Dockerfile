@@ -54,6 +54,7 @@ WORKDIR /opt/fritzing-render
 COPY CMakeLists.txt ./
 COPY src src
 COPY tests tests
+COPY parts parts
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DFRITZING_APP=/opt/fritzing-app -DQT_NO_PRIVATE_MODULE_WARNING=ON > /dev/null \
  && cmake --build build -j"$(nproc)" \
  && (cd build && ctest --output-on-failure)
@@ -71,6 +72,7 @@ COPY --from=fritzing-app /opt/fritzing-app/resources/templates /opt/fritzing-app
 COPY --from=fritzing-app /opt/fritzing-app/resources/fonts /usr/share/fonts/fritzing
 RUN fc-cache -f > /dev/null
 COPY --from=vendor /opt/fritzing-render/vendor /opt/fritzing-render/vendor
+COPY parts /opt/fritzing-render/parts
 COPY --from=build /opt/fritzing-render/build/fritzing-render /usr/local/bin/fritzing-render
 COPY --from=mcp /opt/fritzing-render/mcp /opt/fritzing-render/mcp
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
