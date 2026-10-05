@@ -1,0 +1,27 @@
+{
+  "parts": [
+    { "id": "fs2", "part": "Feather S2/part.Feather S2_be3248095f26645d0c2e37e840a3aec9_2.fzp", "x": 40, "y": 200, "label": "FeatherS2 (ESP32-S2)" },
+    { "id": "nano", "part": "RedBearBLENanoV1_5ModuleID", "x": 100, "y": 330, "rotate": 180, "label": "BLE Nano v1.5 (BTHome bridge)", "labelBelow": true },
+    { "id": "pms", "part": "Adafruit PMSA003I Air Quality Breakout/part.adafruit_5c0a4ef5ca250ddc0066c028af7d4113_1.fzp", "x": 300, "y": 20, "label": "PMSA003I · 0x12" },
+    { "id": "sgp", "part": "Adafruit SGP30/part.adafruit_6a5b9c4160c3c9c14f3ca9af9dcc6472_1.fzp", "x": 500, "y": 137, "label": "SGP30 · 0x58" },
+    { "id": "bme", "part": "Adafruit BME680/part.adafruit_e653382e480159c08504cf3dc924d346_1.fzp", "x": 660, "y": 137, "label": "BME680 · 0x77" }
+  ],
+  "wires": [
+    { "from": "fs2.SCL", "to": "pms.connector26", "color": "yellow", "via": [[192.4, 177.2]] },
+    { "from": "fs2.SDA", "to": "pms.connector25", "color": "blue", "via": [[201.4, 171.5]] },
+    { "from": "fs2.3V3", "to": "pms.connector24", "color": "red", "via": [[75.4, 295], [26, 295], [26, 165.8]] },
+    { "from": "fs2.GND", "to": "pms.connector23", "color": "black", "via": [[93.4, 301], [20, 301], [20, 160.2]] },
+    { "from": "pms.connector20", "to": "sgp.connector20", "color": "yellow", "via": [[445, 159.6], [445, 177.3]] },
+    { "from": "pms.connector19", "to": "sgp.connector19", "color": "blue", "via": [[455, 165.3], [455, 171.7]] },
+    { "from": "pms.connector18", "to": "sgp.connector18", "color": "red", "via": [[465, 170.9], [465, 165.7]] },
+    { "from": "pms.connector17", "to": "sgp.connector17", "color": "black", "via": [[475, 176.6], [475, 160.3]] },
+    { "from": "sgp.connector14", "to": "bme.connector20", "color": "yellow", "via": [[608, 159.7], [608, 177.3]] },
+    { "from": "sgp.connector13", "to": "bme.connector19", "color": "blue", "via": [[618, 165.3], [618, 171.6]] },
+    { "from": "sgp.connector12", "to": "bme.connector18", "color": "red", "via": [[628, 171], [628, 165.9]] },
+    { "from": "sgp.connector11", "to": "bme.connector17", "color": "black", "via": [[638, 176.7], [638, 160.3]] },
+    { "from": "fs2.TX", "to": "nano.P0_11", "color": "green", "via": [[192.4, 363.4]] },
+    { "from": "fs2.GND", "to": "nano.connector10", "color": "black", "via": [[93.4, 354.4]] },
+    { "from": "fs2.3V3", "to": "nano.VIN", "color": "red", "via": [[75.4, 320], [105.8, 320]] }
+  ],
+  "margin": 18
+}

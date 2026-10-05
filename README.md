@@ -8,7 +8,7 @@ and look at the image. A [Docker image](#docker) has it all, parts included.
 
 ![ESP32 air station](examples/esp32-air-station.png)
 
-More in [examples/](examples): an [ODROID-SHOW2 display](examples/odroid-show2.png) and a [smoke test](examples/smoke.png). Their sketches are the `.json` files beside them.
+More in [examples/](examples): an [ODROID-SHOW2 on a LiPo with a BLE Nano relay](examples/odroid-show2.png), a [FeatherS2 air station](examples/feathers2-air.png) with three Adafruit sensors and a BLE Nano bridge, and a [smoke test](examples/smoke.png). Their sketches are the `.json` files beside them.
 
 ## Docker
 
