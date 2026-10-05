@@ -45,6 +45,75 @@ or `claude mcp add fritzing-render -- docker run -i --rm -v "$PWD:$PWD" -w "$PWD
 The container runs as root; on Linux, add `--user "$(id -u):$(id -g)"` to
 keep files it saves yours.
 
+### Example
+
+[`examples/blink.fzz`](examples/blink.fzz) is the classic blink circuit: an
+Arduino Uno driving a red LED through a 220 Ω resistor on a half
+breadboard. An `.fzz` is a zip holding the sketch's `.fz` XML (plus any
+custom parts); this one holds just [`blink.fz`](examples/blink.fz), small
+enough to read whole:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<module fritzingVersion="1.0.8">
+  <instances>
+    <instance moduleIdRef="arduino_Uno_Rev3(fix)" modelIndex="1" path="arduino_Uno_Rev3(fix).fzp">
+      <title>Arduino</title>
+      <views><breadboardView layer="breadboardbreadboard"><geometry z="1.5" x="0" y="60"/></breadboardView></views>
+    </instance>
+    <instance moduleIdRef="0152b316-ca6e-11ee-a6fa-8be78db221f8BreadboardModuleID" modelIndex="2" path="Half_breadboard_v2.fzp">
+      <title>Breadboard</title>
+      <views><breadboardView layer="breadboardbreadboard"><geometry z="1.6" x="300" y="0"/></breadboardView></views>
+    </instance>
+    <instance moduleIdRef="LED-genedb611bf8177f41ac9c325217070f0c62ColorLEDModuleID" modelIndex="3" path="LED-generic-5mm_6852162_005.fzp">
+      <property name="color" value="Red (633nm)"/>
+      <title>LED1</title>
+      <views><breadboardView layer="breadboard"><geometry z="2.5" x="424.99" y="-22.28"/></breadboardView></views>
+    </instance>
+    <instance moduleIdRef="ResistorModuleID" modelIndex="4" path="resistor.fzp">
+      <property name="resistance" value="220Ω"/>
+      <title>R1</title>
+      <views><breadboardView layer="breadboard"><geometry z="2.6" x="438.34" y="58.46"/></breadboardView></views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="5" path="wire.fzp">
+      <title>D13</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.5" x="125.06" y="69" x1="0" y1="0" x2="350.59" y2="3" wireFlags="64"/>
+          <wireExtras mils="22.2222" color="#ffe24d" opacity="1" banded="0">
+            <bezier><cp0 x="40" y="-45"/><cp1 x="300" y="-15"/></bezier>
+          </wireExtras>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="6" path="wire.fzp">
+      <title>GND</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.5" x="116.06" y="69" x1="0" y1="0" x2="314.59" y2="-15" wireFlags="64"/>
+          <wireExtras mils="22.2222" color="#404040" opacity="1" banded="0">
+            <bezier><cp0 x="30" y="-45"/><cp1 x="260" y="-30"/></bezier>
+          </wireExtras>
+        </breadboardView>
+      </views>
+    </instance>
+  </instances>
+</module>
+```
+
+Parts are named by their Fritzing module id, placed in scene units (90 per
+inch), and wires run between end points, curved by Bézier control points.
+Render it with nothing installed but Docker:
+
+```sh
+cd examples
+docker run --rm -v "$PWD:/work" ghcr.io/leonfedotov/fritzing-render render blink.fzz --png blink.png
+```
+
+`blink.png`:
+
+![The blink sketch rendered: an Arduino Uno wired to an LED and resistor on a half breadboard](examples/blink.png)
+
 ## How it works
 
 Fritzing exports a view in `SketchWidget::renderToSVG`: each part's SVG for
