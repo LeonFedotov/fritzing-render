@@ -14,6 +14,10 @@ if(NOT EXISTS "${FRITZING_APP}/src/fsvgrenderer.cpp")
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Xml)
+# QZipReader (Qt's private zip reader) unpacks .fzz files. Qt 6.10 moved
+# private modules into their own packages; before that Qt6::CorePrivate
+# comes with Core.
+find_package(Qt6 QUIET COMPONENTS CorePrivate)
 find_package(Boost REQUIRED)
 
 set(FZ "${FRITZING_APP}/src")
@@ -46,6 +50,8 @@ add_library(frcore STATIC
   src/fzp.cpp
   src/partlib.cpp
   src/sketch.cpp
+  src/fzz.cpp
+  src/generated.cpp
   src/render.cpp
 )
 
@@ -58,7 +64,7 @@ target_include_directories(frcore PUBLIC
 
 
 target_link_libraries(frcore PUBLIC
-  Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::Xml
+  Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::Xml Qt6::CorePrivate
 )
 
 target_compile_definitions(frcore PUBLIC

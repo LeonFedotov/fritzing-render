@@ -7,6 +7,8 @@
 #include <QSvgRenderer>
 #include <QTransform>
 
+#include <algorithm>
+
 #include "connectors/svgidlayer.h"
 #include "fsvgrenderer.h"
 #include "svg/svgfilesplitter.h"
@@ -43,6 +45,10 @@ WireColor wireColor(const QString & spec, const QHash<QString, WireColor> & pale
 	if (palette.contains(spec.toLower())) return palette.value(spec.toLower());
 	const QColor c(spec);
 	if (!c.isValid()) return palette.value("blue", WireColor{"#418dd9", "#1b5bb3"});
+	// RatsnestColors::wireColor's reverse lookup: a palette wire color keeps its shadow
+	for (const WireColor & w : palette) {
+		if (QColor(w.wire) == c) return w;
+	}
 	return WireColor{c.name(), c.darker(150).name()};
 }
 
@@ -66,6 +72,7 @@ QPointF labelAnchor(const Placed & p) {
 }
 
 QTransform placement(const sketch::PartSpec & spec, QSizeF size) {
+	if (spec.transform) return *spec.transform;
 	QTransform t;
 	t.translate(spec.pos.x(), spec.pos.y());
 	t.translate(size.width() / 2, size.height() / 2);
@@ -183,18 +190,32 @@ QString labelSvg(const QString & text, QPointF scenePos) {
 	    .arg(text.toHtmlEscaped());
 }
 
-// ConnectorItem::makeLegSvg for a leg that hasn't been bent: one straight
-// path, in part coordinates (export units), so the part's rotation applies.
-QString legsSvg(const LoadedPart & lp) {
+QString exportPoint(QPointF p) {
+	return QString("%1,%2").arg(toExport(p.x())).arg(toExport(p.y()));
+}
+
+// The leg as drawn: bent as saved in a .fz, else straight from the drawing.
+sketch::Leg legOf(const ConnectorPoint & c, const sketch::PartSpec & spec) {
+	if (spec.legs.contains(c.id)) return spec.legs.value(c.id);
+	return sketch::Leg{QPolygonF({c.leg.p1(), c.leg.p2()}), {QPolygonF()}};
+}
+
+// ConnectorItem::makeLegSvg: one path through the leg's points, curved where
+// it was bent into a curve, in part coordinates (export units), so the
+// part's transform applies.
+QString legsSvg(const LoadedPart & lp, const sketch::PartSpec & spec) {
 	QString out;
 	for (const ConnectorPoint & c : lp.connectors) {
 		if (c.legId.isEmpty() || c.leg.isNull()) continue;
-		out += QString("<path d='M%1,%2 L%3,%4' fill='none' stroke='%5' stroke-width='%6' stroke-linecap='round'/>")
-		           .arg(toExport(c.leg.p1().x()))
-		           .arg(toExport(c.leg.p1().y()))
-		           .arg(toExport(c.leg.p2().x()))
-		           .arg(toExport(c.leg.p2().y()))
-		           .arg(c.legColor.isEmpty() ? "#8c8c8c" : c.legColor)
+		const sketch::Leg leg = legOf(c, spec);
+		QString d = "M" + exportPoint(leg.points.first());
+		for (int i = 1; i < leg.points.size(); i++) {
+			const QPolygonF & cps = leg.curves.value(i - 1);
+			d += cps.size() == 2 ? QString(" C%1 %2 %3").arg(exportPoint(cps[0]), exportPoint(cps[1]), exportPoint(leg.points[i]))
+			                     : " L" + exportPoint(leg.points[i]);
+		}
+		out += QString("<path d='%1' fill='none' stroke='%2' stroke-width='%3' stroke-linecap='round'/>")
+		           .arg(d, c.legColor.isEmpty() ? "#8c8c8c" : c.legColor)
 		           .arg(toExport(c.legWidth));
 	}
 	return out;
@@ -321,12 +342,19 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		}
 		p.toScene = placement(spec, p.loaded.size);
 		p.sceneRect = p.toScene.mapRect(QRectF(QPointF(0, 0), p.loaded.size));
-		for (const ConnectorPoint & cp : p.loaded.connectors) {
-			if (!cp.leg.isNull()) p.sceneRect |= p.toScene.mapRect(QRectF(cp.leg.p1(), cp.leg.p2()).normalized());
+		for (ConnectorPoint & cp : p.loaded.connectors) {
+			if (cp.leg.isNull()) continue;
+			const sketch::Leg leg = legOf(cp, spec);
+			QPolygonF all = leg.points;
+			for (const QPolygonF & cps : leg.curves) all << cps;
+			p.sceneRect |= p.toScene.map(all).boundingRect();
+			cp.local = leg.points.last();  // a bent leg still ends the connector
 		}
 		placed.insert(spec.id, p);
 		order << spec.id;
 	}
+	// Fritzing's stacking order: breadboards under the parts plugged into them.
+	std::stable_sort(order.begin(), order.end(), [&](const QString & a, const QString & b) { return placed[a].spec.z < placed[b].spec.z; });
 
 	auto endpoint = [&](const QString & ref, QPointF & out) -> QString {
 		const int dot = ref.indexOf('.');
@@ -348,11 +376,17 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 
 	struct Line {
 		QList<QPointF> points;
+		QPolygonF curve;  // a curved wire's control points
 		WireColor color;
+		double width;
 	};
 	const QHash<QString, WireColor> palette = loadWireColors();
 	QList<Line> lines;
 	for (const sketch::WireSpec & w : sk.wires) {
+		if (w.fixed) {
+			lines << Line{{w.p1, w.p2}, w.curve, wireColor(w.color, palette), w.width};
+			continue;
+		}
 		QPointF a, b;
 		QString err = endpoint(w.from, a);
 		if (err.isEmpty()) err = endpoint(w.to, b);
@@ -360,7 +394,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 			result.error = QString("wire %1 -> %2: %3").arg(w.from, w.to, err);
 			return result;
 		}
-		Line line{{a}, wireColor(w.color, palette)};
+		Line line{{a}, {}, wireColor(w.color, palette), w.width};
 		line.points << w.via << b;
 		lines << line;
 	}
@@ -373,7 +407,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		if (!p.spec.label.isEmpty()) bounds |= QRectF(labelAnchor(p).x(), labelAnchor(p).y() - 10, p.spec.label.size() * 6, 14);
 	}
 	for (const Line & l : lines) {
-		for (const QPointF & pt : l.points) bounds |= QRectF(pt - QPointF(3, 3), QSizeF(6, 6));
+		for (const QPointF & pt : l.points + l.curve) bounds |= QRectF(pt - QPointF(3, 3), QSizeF(6, 6));
 	}
 	bounds.adjust(-sk.margin, -sk.margin, sk.margin, sk.margin);
 	const QPointF offset = bounds.topLeft();
@@ -387,32 +421,37 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 			result.error = QString("part %1: %2").arg(id, err);
 			return result;
 		}
-		const QPointF at = p.spec.pos - offset;
-		out += QString("<g id='%1' transform='translate(%2,%3) rotate(%4,%5,%6)'>%7</g>\n")
+		// part coordinates -> scene, less the offset, with the translation in export units
+		const QTransform & t = p.toScene;
+		out += QString("<g id='%1' transform='matrix(%2 %3 %4 %5 %6 %7)'>%8</g>\n")
 		           .arg(id.toHtmlEscaped())
-		           .arg(toExport(at.x()))
-		           .arg(toExport(at.y()))
-		           .arg(p.spec.rotate)
-		           .arg(toExport(p.loaded.size.width() / 2))
-		           .arg(toExport(p.loaded.size.height() / 2))
-		           .arg(svg + legsSvg(p.loaded));
+		           .arg(t.m11())
+		           .arg(t.m12())
+		           .arg(t.m21())
+		           .arg(t.m22())
+		           .arg(toExport(t.dx() - offset.x()))
+		           .arg(toExport(t.dy() - offset.y()))
+		           .arg(svg + legsSvg(p.loaded, p.spec));
 		if (!p.spec.label.isEmpty()) out += labelSvg(p.spec.label, labelAnchor(p) - offset) + "\n";
 	}
 
-	// Wire::makeWireSVG: a 4-unit shadow under a 2-unit line (the default
-	// breadboard wire, 22.2 mil). Shadows first, so joints stay clean.
+	// Wire::makeWireSVG: a shadow 2 units wider under the line (the default
+	// breadboard wire is 22.2 mil, 2 units). Shadows first, so joints stay clean.
 	const QVector<qreal> noDash;
+	auto stroke = [&](const Line & l, double width, const QString & color) {
+		QString svg;
+		if (l.curve.size() == 2) {
+			const QPolygonF poly({l.points.first() - offset, l.curve[0] - offset, l.curve[1] - offset, l.points.last() - offset});
+			return TextUtils::makeCubicBezierSVG(poly, width, color, ExportDpi, SceneDpi, false, false, noDash);
+		}
+		for (int i = 1; i < l.points.size(); i++) {
+			svg += TextUtils::makeLineSVG(l.points[i - 1] - offset, l.points[i] - offset, width, color, ExportDpi, SceneDpi, false, false, noDash);
+		}
+		return svg;
+	};
 	out += "<g id='wires'>\n";
-	for (const Line & l : lines) {
-		for (int i = 1; i < l.points.size(); i++) {
-			out += TextUtils::makeLineSVG(l.points[i - 1] - offset, l.points[i] - offset, 4, l.color.shadow, ExportDpi, SceneDpi, false, false, noDash);
-		}
-	}
-	for (const Line & l : lines) {
-		for (int i = 1; i < l.points.size(); i++) {
-			out += TextUtils::makeLineSVG(l.points[i - 1] - offset, l.points[i] - offset, 2, l.color.wire, ExportDpi, SceneDpi, false, false, noDash);
-		}
-	}
+	for (const Line & l : lines) out += stroke(l, l.width + 2, l.color.shadow);
+	for (const Line & l : lines) out += stroke(l, l.width, l.color.wire);
 	out += "</g>\n</svg>\n";
 
 	result.svg = out;

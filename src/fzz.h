@@ -1,0 +1,35 @@
+#pragma once
+// Fritzing's own sketch files: an .fzz (a zip of the .fz sketch and any
+// parts it bundles) or a bare .fz. Only the breadboard view is read: its
+// parts, placed by their saved transforms, with LED colors and bent legs,
+// and its wires, curves included. Traces, schematic and PCB items are not
+// part of that view; notes and parts no library has are left out with a
+// warning.
+
+#include <QByteArray>
+#include <QString>
+#include <QStringList>
+
+#include "sketch.h"
+
+namespace fzz {
+
+enum class Format { Json, Fz, Fzz };
+
+// What a sketch file holds, from its first bytes.
+Format detect(const QByteArray & data);
+
+struct Loaded {
+	sketch::Sketch sketch;  // parts refer to their .fzp files by absolute path
+	QStringList warnings;   // what was left out, and why
+	QString error;          // empty on success
+};
+
+// An .fzz or .fz file's contents, with parts resolved by moduleId against
+// `roots` (obsolete parts included, as old sketches use them) and, for an
+// .fzz, the parts bundled in it, unpacked into `workDir`. Parts Fritzing
+// generates (generated.h) are written to `workDir` too; with no workDir
+// they are left out.
+Loaded load(const QByteArray & data, const QStringList & roots, const QString & workDir);
+
+}  // namespace fzz

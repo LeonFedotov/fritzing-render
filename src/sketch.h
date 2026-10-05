@@ -24,17 +24,33 @@
 // moduleId or an exact title. Connectors are "<part id>.<connector id or name>".
 // "color" is a Fritzing wire color name (blue, red, black, yellow, green,
 // grey, white, orange, ochre, cyan, brown, purple, pink) or #rrggbb.
+//
+// Sketches read from Fritzing's own files (fzz.h) fill in the fields marked
+// "from a .fz": a part's full transform and stacking order, its bent legs,
+// and wires given by their end points rather than by connectors.
 
+#include <QHash>
 #include <QList>
 #include <QPointF>
+#include <QPolygonF>
 #include <QString>
 #include <QStringList>
+#include <QTransform>
+
+#include <optional>
 
 namespace sketch {
 
 struct Generic {
 	QString title;
 	QStringList pins;
+};
+
+// A bendable leg as Fritzing saves it: a polyline in part coordinates, and
+// for each segment either nothing (straight) or its two Bézier control points.
+struct Leg {
+	QPolygonF points;
+	QList<QPolygonF> curves;  // curves[i]: from points[i] to points[i + 1]
 };
 
 struct PartSpec {
@@ -46,6 +62,11 @@ struct PartSpec {
 	QString label;
 	bool labelBelow = false;  // "labelBelow": true puts the label under the part
 	QString color;            // recolors the part's color_* elements (Fritzing's LED colors)
+	// From a .fz: part coordinates -> scene, in place of pos and rotate; the
+	// stacking order (lower first); legs bent by the user, by connector id.
+	std::optional<QTransform> transform;
+	double z = 0;
+	QHash<QString, Leg> legs;
 };
 
 struct WireSpec {
@@ -53,6 +74,13 @@ struct WireSpec {
 	QString to;
 	QString color = "blue";
 	QList<QPointF> via;
+	// From a .fz: fixed scene end points in place of from/to/via, the
+	// Bézier control points of a curved wire (else empty), and the width.
+	bool fixed = false;
+	QPointF p1;
+	QPointF p2;
+	QPolygonF curve;
+	double width = 2;  // scene units: Fritzing's default 22.2 mil wire
 };
 
 struct Sketch {

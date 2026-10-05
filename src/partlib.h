@@ -24,8 +24,9 @@ struct Entry {
 // vendor folders this build was configured with.
 QStringList defaultRoots();
 
-// Every .fzp under the roots (skipping obsolete/), with its header fields.
-QList<Entry> index(const QStringList & roots);
+// Every .fzp under the roots, with its header fields. obsolete/ folders are
+// skipped unless `withObsolete` (old sketches still use their parts).
+QList<Entry> index(const QStringList & roots, bool withObsolete = false);
 
 // Entries whose title, moduleId, family, tags or file name contain every
 // word of `query` (case-insensitive), best (title) matches first.

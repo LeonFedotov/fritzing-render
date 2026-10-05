@@ -56,20 +56,20 @@ QStringList defaultRoots() {
 }
 
 // .fzp files under `dir`, not descending into svg/ (thousands of drawings,
-// no part files), obsolete/ or hidden folders.
-void collect(const QDir & dir, int depth, QList<Entry> & out) {
+// no part files), hidden folders, or obsolete/ unless asked to.
+void collect(const QDir & dir, int depth, bool withObsolete, QList<Entry> & out) {
 	for (const QFileInfo & f : dir.entryInfoList({"*.fzp"}, QDir::Files)) out << readEntry(f.absoluteFilePath());
 	if (depth == 0) return;
 	for (const QFileInfo & d : dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
 		const QString name = d.fileName();
-		if (name == "svg" || name == "obsolete" || name.startsWith('.')) continue;
-		collect(QDir(d.absoluteFilePath()), depth - 1, out);
+		if (name == "svg" || (name == "obsolete" && !withObsolete) || name.startsWith('.')) continue;
+		collect(QDir(d.absoluteFilePath()), depth - 1, withObsolete, out);
 	}
 }
 
-QList<Entry> index(const QStringList & roots) {
+QList<Entry> index(const QStringList & roots, bool withObsolete) {
 	QList<Entry> out;
-	for (const QString & root : roots) collect(QDir(root), 3, out);
+	for (const QString & root : roots) collect(QDir(root), 3, withObsolete, out);
 	return out;
 }
 

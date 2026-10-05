@@ -8,8 +8,11 @@ import {
   describePart,
   formatPart,
   formatSearch,
+  parseWarnings,
   renderArgs,
   renderDiagram,
+  renderSketchFile,
+  renderSummary,
   searchParts,
   type PartInfo,
 } from '../src/cli.ts'
@@ -28,6 +31,16 @@ test('renderArgs writes both files and passes ppi and transparency', () => {
     'render', 's.json', '-o', 'o.svg', '--png', 'o.png', '--ppi', '200',
   ])
   assert.deepEqual(renderArgs({ sketchFile: 's.json', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: true }).at(-1), '--transparent')
+})
+
+test('parseWarnings keeps the CLI\'s warning lines', () => {
+  assert.deepEqual(parseWarnings('warning: 1 note left out\nsomething else\nwarning: J1 left out\n'), ['1 note left out', 'J1 left out'])
+  assert.deepEqual(parseWarnings(''), [])
+})
+
+test('renderSummary lists saved files and warnings', () => {
+  const text = renderSummary('a.fzz', { png: Buffer.alloc(0), svg: '', warnings: ['1 note left out: notes are not drawn'] }, ['/tmp/a.png'])
+  assert.equal(text, 'Rendered a.fzz. Saved: /tmp/a.png\nwarning: 1 note left out: notes are not drawn')
 })
 
 test('formatSearch shows the title and the ref to use in a sketch', () => {
@@ -77,4 +90,15 @@ test('render errors come back as messages, not crashes', { skip: !haveBinary && 
     renderDiagram(bin, { parts: [{ id: 'mcu', part: 'core/Arduino Nano3(fix).fzp' }], wires: [{ from: 'mcu.D99', to: 'mcu.D2' }] }, {}),
     /no connector "D99"/,
   )
+})
+
+test('renders a Fritzing .fzz file, with its bundled parts', { skip: !existsSync(bin) && 'build first' }, async () => {
+  const out = await renderSketchFile(bin, join(repoRoot, 'tests/fixtures/bundled.fzz'), { ppi: 90 })
+  assert.equal(out.png.subarray(1, 4).toString(), 'PNG')
+  assert.match(out.svg, /<svg/)
+  assert.deepEqual(out.warnings, [])
+})
+
+test('sketch file errors come back as messages', { skip: !existsSync(bin) && 'build first' }, async () => {
+  await assert.rejects(renderSketchFile(bin, join(repoRoot, 'tests/fixtures/missing.fzz'), {}), /cannot read/)
 })

@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<module moduleId='FixtureColorLEDModuleID'>
+ <title>Fixture Leg LED</title>
+ <tags><tag>fixture</tag></tags>
+ <properties><property name='family'>test family</property></properties>
+ <views>
+  <breadboardView>
+   <layers image='breadboard/legled.svg'><layer layerId='breadboard'/></layers>
+  </breadboardView>
+ </views>
+ <connectors>
+  <connector id='connector0' name='cathode' type='male'>
+   <description>cathode</description>
+   <views><breadboardView><p layer='breadboard' svgId='connector0pin' legId='connector0leg'/></breadboardView></views>
+  </connector>
+ </connectors>
+</module>

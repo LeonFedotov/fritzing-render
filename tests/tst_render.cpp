@@ -3,11 +3,14 @@
 // (31.5, 17.775). Tests marked "vendor" use the real parts libraries and
 // skip when scripts/fetch-vendor.sh hasn't been run.
 
+#include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QTemporaryDir>
 #include <QtTest>
 
 #include "fzp.h"
+#include "fzz.h"
 #include "partlib.h"
 #include "render.h"
 #include "sketch.h"
@@ -24,6 +27,23 @@ QString vendorPart(const QString & rel) {
 // Test JSON is written with single quotes (moc can't parse raw string literals).
 QByteArray J(const char * text) {
 	return QByteArray(text).replace('\'', '"');
+}
+
+QByteArray readFile(const QString & path) {
+	QFile f(path);
+	return f.open(QIODevice::ReadOnly) ? f.readAll() : QByteArray();
+}
+
+// tests/fixtures/sketch.fz, its parts resolved against the fixture libraries.
+fzz::Loaded fixtureSketch() {
+	return fzz::load(readFile(Fixtures + "/sketch.fz"), FixtureRoots, {});
+}
+
+const sketch::PartSpec * partNamed(const sketch::Sketch & s, const QString & id) {
+	for (const auto & p : s.parts) {
+		if (p.id == id) return &p;
+	}
+	return nullptr;
 }
 
 // The first wire line's coordinates in an SVG (export units).
@@ -74,7 +94,7 @@ private Q_SLOTS:
 
 	void resolveByPathModuleIdAndTitle() {
 		const auto entries = partlib::index(FixtureRoots);
-		QCOMPARE(entries.size(), 4);
+		QCOMPARE(entries.size(), 5);
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "core/testpart.fzp").endsWith("testpart.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "FlatModuleID").endsWith("part.flat.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "test part").endsWith("testpart.fzp"));
@@ -268,6 +288,120 @@ private Q_SLOTS:
 			QCOMPARE(c.local, c.leg.p2());
 			QVERIFY(c.local.y() > lp.size.height());  // the leg reaches past the body
 		}
+	}
+
+	void fzPlacesPartsWithTheirTransforms() {
+		const fzz::Loaded l = fixtureSketch();
+		QVERIFY2(l.error.isEmpty(), qPrintable(l.error));
+		QCOMPARE(l.sketch.parts.size(), 2);
+		const sketch::PartSpec * u1 = partNamed(l.sketch, "U1");
+		QVERIFY(u1 != nullptr && u1->transform.has_value());
+		QVERIFY(u1->part.endsWith("testpart.fzp"));
+		// IN (4.5, 14.4), turned about (18, 9) -> (12.6, -4.5), then placed at (100, 50)
+		const QPointF in = u1->transform->map(QPointF(4.5, 14.4));
+		QVERIFY(qAbs(in.x() - 112.6) < 1e-9 && qAbs(in.y() - 45.5) < 1e-9);
+		QCOMPARE(u1->z, 2.5);
+	}
+
+	void fzKeepsLedColorsAndBentLegs() {
+		const fzz::Loaded l = fixtureSketch();
+		const sketch::PartSpec * led = partNamed(l.sketch, "LED1");
+		QVERIFY(led != nullptr);
+		QCOMPARE(led->color, QString("Yellow (595nm)"));
+		const sketch::Leg leg = led->legs.value("connector0");
+		// leg points are relative to the connector at (4.5, 18)
+		QCOMPARE(leg.points, QPolygonF({QPointF(4.5, 18), QPointF(4.5, 27), QPointF(13.5, 36)}));
+		QCOMPARE(leg.curves.size(), 2);
+		QVERIFY(leg.curves[0].isEmpty());
+		QCOMPARE(leg.curves[1], QPolygonF({QPointF(4.5, 31.5), QPointF(9, 36)}));
+	}
+
+	void fzReadsBreadboardWiresButNotTraces() {
+		const fzz::Loaded l = fixtureSketch();
+		QCOMPARE(l.sketch.wires.size(), 2);
+		const sketch::WireSpec & straight = l.sketch.wires[0];
+		QVERIFY(straight.fixed);
+		QCOMPARE(straight.p1, QPointF(10, 20));
+		QCOMPARE(straight.p2, QPointF(40, 20));
+		QCOMPARE(straight.color, QString("#cc1414"));
+		QVERIFY(qAbs(straight.width - 2) < 1e-3);  // 22.2 mil
+		const sketch::WireSpec & curved = l.sketch.wires[1];
+		QCOMPARE(curved.curve, QPolygonF({QPointF(10, 50), QPointF(30, 50)}));
+		QVERIFY(qAbs(curved.width - 3) < 1e-3);
+	}
+
+	void fzWarnsAboutWhatItLeavesOut() {
+		const QString warnings = fixtureSketch().warnings.join('\n');
+		QVERIFY2(warnings.contains("no_such_module"), qPrintable(warnings));
+		QVERIFY(warnings.contains("X1"));
+		QVERIFY(warnings.contains("note"));
+		QVERIFY(!warnings.contains("NetLabel"));  // schematic-only: not part of this view
+	}
+
+	void fzGeneratesFritzingsPinHeaders() {
+		QTemporaryDir dir;
+		const fzz::Loaded l = fzz::load(readFile(Fixtures + "/sketch.fz"), FixtureRoots, dir.path());
+		QVERIFY2(!l.warnings.join(' ').contains("J1"), qPrintable(l.warnings.join('\n')));
+		const sketch::PartSpec * j1 = partNamed(l.sketch, "J1");
+		QVERIFY(j1 != nullptr);
+		const render::LoadedPart lp = render::loadPart(j1->part);
+		QVERIFY2(lp.error.isEmpty(), qPrintable(lp.error));
+		QCOMPARE(lp.size, QSizeF(27, 9));  // three pins, 0.1 in each
+		QCOMPARE(lp.connectors.size(), 3);
+		QVERIFY(qAbs(lp.connectors[1].local.x() - lp.connectors[0].local.x() - 9) < 1e-6);
+		const render::Result r = render::renderSketch(l.sketch, FixtureRoots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+	}
+
+	void fzRendersTransformsCurvesAndLegs() {
+		fzz::Loaded l = fixtureSketch();
+		l.sketch.margin = 0;
+		const render::Result r = render::renderSketch(l.sketch, FixtureRoots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QVERIFY(r.svg.contains("stroke='#cc1414'"));
+		QVERIFY(r.svg.contains("stroke='#8c0000'"));  // red's shadow, found from the wire's hex color
+		QVERIFY(r.svg.contains(QRegularExpression("<path [^>]*stroke='#418dd9'[^>]*d='M[-\\d.e]+,[-\\d.e]+C")));
+		QVERIFY(r.svg.contains(QRegularExpression("d='M[-\\d.e]+,[-\\d.e]+ L[-\\d.e]+,[-\\d.e]+ C")));  // the bent leg
+		// LED1 (z 2.4) is drawn before U1 (z 2.5)
+		QVERIFY(r.svg.indexOf("id='LED1'") < r.svg.indexOf("id='U1'"));
+		// from the curved wire's start (0, less its 3-unit allowance) to U1's turned body (x 109..127)
+		QCOMPARE(r.size.width(), 130.0);
+	}
+
+	void fzzUnpacksTheSketchAndItsBundledParts() {
+		QTemporaryDir dir;
+		const fzz::Loaded l = fzz::load(readFile(Fixtures + "/bundled.fzz"), FixtureRoots, dir.path());
+		QVERIFY2(l.error.isEmpty(), qPrintable(l.error));
+		QCOMPARE(l.sketch.parts.size(), 1);
+		QVERIFY(l.sketch.parts[0].part.startsWith(dir.path()));
+		const render::Result r = render::renderSketch(l.sketch, FixtureRoots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+	}
+
+	void fzzErrors() {
+		QTemporaryDir dir;
+		QVERIFY(fzz::load("PK\x03\x04garbage", FixtureRoots, dir.path()).error.contains("cannot read"));
+		QVERIFY(fzz::load("<module><instances/></module>", FixtureRoots, dir.path()).error.contains("no parts"));
+		QVERIFY(fzz::load("<not-closed", FixtureRoots, dir.path()).error.contains("invalid"));
+	}
+
+	void fzzIsRecognisedByItsBytes() {
+		QCOMPARE(fzz::detect(readFile(Fixtures + "/bundled.fzz")), fzz::Format::Fzz);
+		QCOMPARE(fzz::detect(readFile(Fixtures + "/sketch.fz")), fzz::Format::Fz);
+		QCOMPARE(fzz::detect("  {\"parts\": []}"), fzz::Format::Json);
+	}
+
+	void vendorFritzingExampleSketchRenders() {
+		const QString path = QStringLiteral(FR_FRITZING_APP) + "/sketches/core/AnalogInputPot.fzz";
+		if (!QFileInfo::exists(path) || !QFileInfo::exists(vendorPart("core"))) QSKIP("vendor parts or fritzing-app sketches missing");
+		QTemporaryDir dir;
+		const QStringList roots = partlib::defaultRoots();
+		const fzz::Loaded l = fzz::load(readFile(path), roots, dir.path());
+		QVERIFY2(l.error.isEmpty(), qPrintable(l.error));
+		QVERIFY2(!l.warnings.join(' ').contains("not in the parts"), qPrintable(l.warnings.join('\n')));
+		QCOMPARE(l.sketch.parts.size(), 5);  // Arduino, potentiometer, LED, two half breadboards
+		const render::Result r = render::renderSketch(l.sketch, roots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
 	}
 };
 

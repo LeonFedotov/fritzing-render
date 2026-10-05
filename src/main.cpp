@@ -1,6 +1,6 @@
 // fritzing-render: Fritzing breadboard diagrams to SVG/PNG without the app.
 //
-//   fritzing-render render <sketch.json|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]
+//   fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]
 //   fritzing-render search <words...> [--limit 20] [--json]
 //   fritzing-render part <fzp path | moduleId | title> [--json]
 //
@@ -11,10 +11,12 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTemporaryDir>
 #include <QTextStream>
 
 #include <cstdio>
 
+#include "fzz.h"
 #include "partlib.h"
 #include "render.h"
 #include "sketch.h"
@@ -33,7 +35,7 @@ QTextStream & err() {
 
 int usage() {
 	err() << "usage:\n"
-	         "  fritzing-render render <sketch.json|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]\n"
+	         "  fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]\n"
 	         "  fritzing-render search <words...> [--limit 20] [--json]\n"
 	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n";
 	return 2;
@@ -133,18 +135,32 @@ int cmdRender(QStringList args) {
 		err() << "cannot read " << args.first() << "\n";
 		return 1;
 	}
-	const sketch::ParseResult parsed = sketch::parse(input);
-	if (!parsed.error.isEmpty()) {
-		err() << parsed.error << "\n";
-		return 1;
-	}
 	const QStringList roots = partlib::defaultRoots();
-	const render::Result r = render::renderSketch(parsed.sketch, roots, partlib::index(roots));
+	QStringList warnings;
+	render::Result r;
+	if (fzz::detect(input) == fzz::Format::Json) {
+		const sketch::ParseResult parsed = sketch::parse(input);
+		if (!parsed.error.isEmpty()) {
+			err() << parsed.error << "\n";
+			return 1;
+		}
+		r = render::renderSketch(parsed.sketch, roots, partlib::index(roots));
+	} else {
+		// A Fritzing sketch: its parts come resolved to files, some perhaps unpacked here.
+		const QTemporaryDir work;
+		const fzz::Loaded loaded = fzz::load(input, roots, work.path());
+		if (!loaded.error.isEmpty()) {
+			err() << loaded.error << "\n";
+			return 1;
+		}
+		warnings = loaded.warnings;
+		r = render::renderSketch(loaded.sketch, roots, {});
+	}
 	if (!r.error.isEmpty()) {
 		err() << r.error << "\n";
 		return 1;
 	}
-	for (const QString & w : r.warnings) err() << "warning: " << w << "\n";
+	for (const QString & w : warnings + r.warnings) err() << "warning: " << w << "\n";
 	if (svgOut.isEmpty() && pngOut.isEmpty()) {
 		out() << r.svg;
 		return 0;
@@ -168,7 +184,8 @@ int cmdRender(QStringList args) {
 int main(int argc, char * argv[]) {
 	// No window system needed: Qt's offscreen platform still gives fonts and painting.
 	if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) qputenv("QT_QPA_PLATFORM", "offscreen");
-	if (qEnvironmentVariableIsEmpty("QT_LOGGING_RULES")) qputenv("QT_LOGGING_RULES", "qt.qpa.fonts=false");
+	// Font fallbacks, and part drawings Qt's SVG renderer finds fault with, are not the user's to fix.
+	if (qEnvironmentVariableIsEmpty("QT_LOGGING_RULES")) qputenv("QT_LOGGING_RULES", "qt.qpa.fonts=false;qt.svg=false");
 	QApplication app(argc, argv);
 	QStringList args = app.arguments().mid(1);
 	if (args.isEmpty()) return usage();

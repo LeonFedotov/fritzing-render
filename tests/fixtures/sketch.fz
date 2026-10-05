@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A Fritzing sketch in miniature: what fzz::parse keeps (breadboard parts,
+     breadboard wires, bent legs, LED colors) and what it leaves out (traces,
+     schematic-only symbols, notes, parts it cannot find), and a pin header,
+     which Fritzing generates rather than keeps in a library. -->
+<module fritzingVersion="1.0.8">
+  <views>
+    <view name="breadboardView" backgroundColor="#ffffff"/>
+  </views>
+  <instances>
+    <!-- turned 90 degrees clockwise about its centre (18, 9) -->
+    <instance moduleIdRef="TestPartModuleID" modelIndex="1" path="testpart.fzp">
+      <title>U1</title>
+      <views>
+        <breadboardView layer="breadboard">
+          <geometry z="2.5" x="100" y="50">
+            <transform m11="0" m12="1" m13="0" m21="-1" m22="0" m23="0" m31="27" m32="-9" m33="1"/>
+          </geometry>
+        </breadboardView>
+        <schematicView layer="schematic">
+          <geometry z="2.5" x="0" y="0"/>
+        </schematicView>
+      </views>
+    </instance>
+    <instance moduleIdRef="FixtureColorLEDModuleID" modelIndex="2" path="legled.fzp">
+      <property name="color" value="Yellow (595nm)"/>
+      <title>LED1</title>
+      <views>
+        <breadboardView layer="breadboard">
+          <geometry z="2.4" x="0" y="0"/>
+          <connectors>
+            <connector connectorId="connector0" layer="breadboard">
+              <geometry x="4.5" y="18"/>
+              <leg>
+                <point x="0" y="0"/>
+                <bezier/>
+                <point x="0" y="9"/>
+                <bezier>
+                  <cp0 x="0" y="13.5"/>
+                  <cp1 x="4.5" y="18"/>
+                </bezier>
+                <point x="9" y="18"/>
+                <bezier/>
+              </leg>
+            </connector>
+          </connectors>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="3" path="wire.fzp">
+      <title>Wire1</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.5" x="10" y="20" x1="0" y1="0" x2="30" y2="0" wireFlags="64"/>
+          <wireExtras mils="22.2222" color="#cc1414" opacity="1" banded="0"/>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="4" path="wire.fzp">
+      <title>Wire2</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.6" x="0" y="60" x1="0" y1="0" x2="40" y2="0" wireFlags="64"/>
+          <wireExtras mils="33.3333" color="#418dd9" opacity="1" banded="0">
+            <bezier>
+              <cp0 x="10" y="-10"/>
+              <cp1 x="30" y="-10"/>
+            </bezier>
+          </wireExtras>
+        </breadboardView>
+      </views>
+    </instance>
+    <!-- a PCB trace and a schematic trace: Fritzing saves a breadboardView for them too -->
+    <instance moduleIdRef="WireModuleID" modelIndex="5" path="wire.fzp">
+      <title>Wire3</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.5" x="0" y="0" x1="0" y1="0" x2="500" y2="500" wireFlags="36"/>
+          <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0"/>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="6" path="wire.fzp">
+      <title>Wire4</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.5" x="0" y="0" x1="0" y1="0" x2="500" y2="500" wireFlags="160"/>
+          <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0"/>
+        </breadboardView>
+      </views>
+    </instance>
+    <!-- old sketches: a wire to a schematic-only symbol, which Fritzing hides (Wire::checkVisibility) -->
+    <instance moduleIdRef="WireModuleID" modelIndex="10" path="wire.fzp">
+      <title>Wire5</title>
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry z="3.5" x="0" y="0" x1="0" y1="0" x2="500" y2="500" wireFlags="64"/>
+          <wireExtras mils="22.2222" color="#ffffff" opacity="1" banded="0"/>
+          <connectors>
+            <connector connectorId="connector0" layer="breadboardWire">
+              <geometry x="0" y="0"/>
+              <connects>
+                <connect connectorId="connector0" modelIndex="7" layer="schematic"/>
+              </connects>
+            </connector>
+          </connectors>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="NetLabelModuleID" modelIndex="7" path="netlabel.fzp">
+      <title>Label1</title>
+      <views>
+        <breadboardView layer="schematic">
+          <geometry z="2.5" x="900" y="900"/>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="NoteModuleID" modelIndex="8" path="note.fzp">
+      <title>Note1</title>
+      <views>
+        <breadboardView layer="breadboardNote">
+          <geometry z="6.5" x="900" y="900" width="100" height="50"/>
+        </breadboardView>
+      </views>
+      <text>hello</text>
+    </instance>
+    <instance moduleIdRef="generic_female_pin_header_3_100mil" modelIndex="9" path="generic_female_pin_header_3_100mil.fzp">
+      <title>J1</title>
+      <views>
+        <breadboardView layer="breadboardbreadboard">
+          <geometry z="2.5" x="900" y="900"/>
+        </breadboardView>
+      </views>
+    </instance>
+    <instance moduleIdRef="no_such_module" modelIndex="11" path="nothing.fzp">
+      <title>X1</title>
+      <views>
+        <breadboardView layer="breadboard">
+          <geometry z="2.5" x="900" y="900"/>
+        </breadboardView>
+      </views>
+    </instance>
+  </instances>
+</module>

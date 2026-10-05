@@ -9,14 +9,54 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
-import { binaryPath, describePart, formatPart, formatSearch, renderDiagram, searchParts } from './cli.ts'
+import {
+  binaryPath,
+  describePart,
+  formatPart,
+  formatSearch,
+  renderDiagram,
+  renderSketchFile,
+  renderSummary,
+  searchParts,
+  type Rendered,
+} from './cli.ts'
 
 const bin = binaryPath(process.env, resolve(import.meta.dirname, '../..'))
 
-const server = new McpServer({ name: 'fritzing-render', version: '0.1.0' })
+const server = new McpServer({ name: 'fritzing-render', version: '0.2.0' })
 
 function failure(error: unknown): { isError: true, content: { type: 'text', text: string }[] } {
   return { isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] }
+}
+
+// Paths are taken relative to the server's working directory.
+async function save(rendered: Rendered, svgPath?: string, pngPath?: string): Promise<string[]> {
+  const saved: string[] = []
+  if (svgPath) {
+    await writeFile(resolve(svgPath), rendered.svg)
+    saved.push(resolve(svgPath))
+  }
+  if (pngPath) {
+    await writeFile(resolve(pngPath), rendered.png)
+    saved.push(resolve(pngPath))
+  }
+  return saved
+}
+
+function imageResult(rendered: Rendered, summary: string): { content: ({ type: 'image', data: string, mimeType: string } | { type: 'text', text: string })[] } {
+  return {
+    content: [
+      { type: 'image', data: rendered.png.toString('base64'), mimeType: 'image/png' },
+      { type: 'text', text: summary },
+    ],
+  }
+}
+
+const imageOptions = {
+  ppi: z.number().min(30).max(600).default(150).describe('PNG resolution'),
+  transparent: z.boolean().default(false),
+  save_svg: z.string().optional().describe('path to also write the SVG to'),
+  save_png: z.string().optional().describe('path to also write the PNG to'),
 }
 
 server.registerTool(
@@ -98,31 +138,38 @@ server.registerTool(
         }))
         .default([]),
       margin: z.number().min(0).default(18),
-      ppi: z.number().min(30).max(600).default(150).describe('PNG resolution'),
-      transparent: z.boolean().default(false),
-      save_svg: z.string().optional().describe('absolute path to also write the SVG to'),
-      save_png: z.string().optional().describe('absolute path to also write the PNG to'),
+      ...imageOptions,
     },
   },
   async ({ parts, wires, margin, ppi, transparent, save_svg, save_png }) => {
     try {
       const out = await renderDiagram(bin, { parts, wires, margin }, { ppi, transparent })
-      const saved: string[] = []
-      if (save_svg) {
-        await writeFile(save_svg, out.svg)
-        saved.push(save_svg)
-      }
-      if (save_png) {
-        await writeFile(save_png, out.png)
-        saved.push(save_png)
-      }
-      const summary = `Rendered ${parts.length} parts and ${wires.length} wires.` + (saved.length ? ` Saved: ${saved.join(', ')}` : '')
-      return {
-        content: [
-          { type: 'image', data: out.png.toString('base64'), mimeType: 'image/png' },
-          { type: 'text', text: summary },
-        ],
-      }
+      const saved = await save(out, save_svg, save_png)
+      return imageResult(out, renderSummary(`${parts.length} parts and ${wires.length} wires`, out, saved))
+    } catch (error) {
+      return failure(error)
+    }
+  },
+)
+
+server.registerTool(
+  'render_fritzing_sketch',
+  {
+    title: 'Render a Fritzing sketch file',
+    description:
+      'Render the breadboard view of a Fritzing sketch file (.fzz, as saved by the Fritzing app, or a bare .fz) to an image (returned as PNG), ' +
+      'optionally saving the SVG and PNG. Parts bundled in the .fzz are used, and generic pin headers are generated as Fritzing does. ' +
+      'Also takes a JSON sketch file in render_diagram\'s format. Notes and parts no library has are left out, and listed as warnings.',
+    inputSchema: {
+      path: z.string().min(1).describe('the sketch file; a relative path is taken from the server\'s working directory'),
+      ...imageOptions,
+    },
+  },
+  async ({ path, ppi, transparent, save_svg, save_png }) => {
+    try {
+      const out = await renderSketchFile(bin, resolve(path), { ppi, transparent })
+      const saved = await save(out, save_svg, save_png)
+      return imageResult(out, renderSummary(resolve(path), out, saved))
     } catch (error) {
       return failure(error)
     }
