@@ -70,6 +70,7 @@ QTransform placement(const sketch::PartSpec & spec, QSizeF size) {
 }
 
 QString partSvg(const LoadedPart & lp, QString & error) {
+	if (!lp.generatedSvg.isEmpty()) return lp.generatedSvg;
 	SvgFileSplitter splitter;
 	if (!splitter.split(lp.svgPath, lp.layerId)) {
 		error = QString("cannot split layer %1 out of %2").arg(lp.layerId, lp.svgPath);
@@ -181,17 +182,51 @@ LoadedPart loadPart(const QString & fzpPath) {
 	return lp;
 }
 
+LoadedPart genericPart(const sketch::Generic & g) {
+	constexpr double Pitch = 9;      // 0.1 in
+	constexpr double TitleSize = 7;  // font size, scene units
+	constexpr double PinSize = 5.5;
+	const int n = static_cast<int>(g.pins.size());
+	const double width = qMax(Pitch * (n - 1) + 2 * Pitch, g.title.size() * TitleSize * 0.56 + 14);
+	int longest = 0;
+	for (const QString & p : g.pins) longest = qMax(longest, static_cast<int>(p.size()));
+	const double height = 16 + longest * PinSize * 0.62 + 10;
+	const double firstPin = (width - Pitch * (n - 1)) / 2;
+
+	LoadedPart lp;
+	lp.part.ok = true;
+	lp.part.title = g.title;
+	lp.part.moduleId = "generic";
+	lp.size = QSizeF(width, height);
+	QString svg = QString("<rect x='0' y='0' width='%1' height='%2' rx='%3' fill='#2b2b2b' stroke='#111111' stroke-width='%4'/>")
+	                  .arg(toExport(width)).arg(toExport(height)).arg(toExport(2)).arg(toExport(0.6));
+	svg += QString("<text x='%1' y='%2' font-family='Droid Sans, Helvetica, Arial, sans-serif' font-size='%3' fill='#f0f0f0' text-anchor='middle'>%4</text>")
+	           .arg(toExport(width / 2)).arg(toExport(11)).arg(toExport(TitleSize)).arg(g.title.toHtmlEscaped());
+	for (int i = 0; i < n; i++) {
+		const double x = firstPin + i * Pitch;
+		const QString id = QString("connector%1").arg(i);
+		lp.part.connectors << fzp::Connector{id, g.pins[i], {}, {}};
+		lp.connectors << ConnectorPoint{id, g.pins[i], {}, QPointF(x, height), true, {}, {}, {}, 0};
+		svg += QString("<rect x='%1' y='%2' width='%3' height='%3' fill='#d9b45a' stroke='#8a6d1f' stroke-width='%4'/>")
+		           .arg(toExport(x - 2.25)).arg(toExport(height - 4.5)).arg(toExport(4.5)).arg(toExport(0.4));
+		svg += QString("<text transform='translate(%1,%2) rotate(-90)' font-family='Droid Sans Mono, Menlo, monospace' font-size='%3' fill='#f0f0f0'>%4</text>")
+		           .arg(toExport(x + PinSize * 0.35)).arg(toExport(height - 7)).arg(toExport(PinSize)).arg(g.pins[i].toHtmlEscaped());
+	}
+	lp.generatedSvg = svg;
+	return lp;
+}
+
 Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const QList<partlib::Entry> & entries) {
 	Result result;
 	QHash<QString, Placed> placed;
 	QStringList order;
 	for (const sketch::PartSpec & spec : sk.parts) {
-		const QString path = partlib::resolve(roots, entries, spec.part);
-		if (path.isEmpty()) {
+		const QString path = spec.part.isEmpty() ? QString() : partlib::resolve(roots, entries, spec.part);
+		if (!spec.part.isEmpty() && path.isEmpty()) {
 			result.error = QString("part %1: no part matches \"%2\" (try: fritzing-render search ...)").arg(spec.id, spec.part);
 			return result;
 		}
-		Placed p{spec, loadPart(path), {}, {}};
+		Placed p{spec, spec.part.isEmpty() ? genericPart(spec.generic) : loadPart(path), {}, {}};
 		if (!p.loaded.error.isEmpty()) {
 			result.error = QString("part %1: %2").arg(spec.id, p.loaded.error);
 			return result;

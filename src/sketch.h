@@ -12,6 +12,10 @@
 //   "margin": 18
 // }
 //
+// A part missing from the libraries can be drawn as a generic labelled
+// block with header pins along its bottom edge, in place of "part":
+//   { "id": "relay", "generic": { "title": "BLE Nano", "pins": ["TX", "GND"] }, "x": 0, "y": 0 }
+//
 // "part" is an .fzp path (absolute or relative to a library root), a
 // moduleId or an exact title. Connectors are "<part id>.<connector id or name>".
 // "color" is a Fritzing wire color name (blue, red, black, yellow, green,
@@ -20,12 +24,19 @@
 #include <QList>
 #include <QPointF>
 #include <QString>
+#include <QStringList>
 
 namespace sketch {
+
+struct Generic {
+	QString title;
+	QStringList pins;
+};
 
 struct PartSpec {
 	QString id;
 	QString part;
+	Generic generic;  // used when `part` is empty
 	QPointF pos;
 	int rotate = 0;  // degrees, clockwise
 	QString label;

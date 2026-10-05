@@ -17,3 +17,18 @@ if [ ! -d adafruit-parts ]; then
     mkdir -p "$d" && unzip -q -o "$z" -d "$d"
   done
 fi
+# Community parts the main libraries lack, unpacked like Adafruit's:
+# TD-er/fritzing-parts (MIT): MH-Z19 CO2 sensor, NodeMCU, OLEDs, LuaNode32.
+# DOIT ESP32 DevKit v1 "improved" (vanepp, Fritzing forum), via a GitHub mirror.
+if [ ! -d community-parts ]; then
+  mkdir community-parts
+  git clone -q --depth 1 https://github.com/TD-er/fritzing-parts.git community-src-tder
+  for z in community-src-tder/*/*.fzpz; do
+    d="community-parts/$(basename "$z" .fzpz)"
+    mkdir -p "$d" && unzip -q -o "$z" -d "$d"
+  done
+  curl -fsSL -o "community-doit-esp32.fzpz" \
+    "https://raw.githubusercontent.com/jorgechacblogspot/librerias_fritzing/main/DOIT%20Esp32%20DevKit%20v1%20improved.fzpz"
+  mkdir -p "community-parts/DOIT Esp32 DevKit v1 improved"
+  unzip -q -o community-doit-esp32.fzpz -d "community-parts/DOIT Esp32 DevKit v1 improved"
+fi

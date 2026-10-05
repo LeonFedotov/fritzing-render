@@ -36,7 +36,15 @@ export type PartInfo = {
 }
 
 export type Sketch = {
-  parts: { id: string, part: string, x?: number, y?: number, rotate?: number, label?: string }[]
+  parts: {
+    id: string
+    part?: string
+    generic?: { title: string, pins: string[] }
+    x?: number
+    y?: number
+    rotate?: number
+    label?: string
+  }[]
   wires?: { from: string, to: string, color?: string, via?: [number, number][] }[]
   margin?: number
 }

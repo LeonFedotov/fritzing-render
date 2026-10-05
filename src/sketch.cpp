@@ -32,7 +32,11 @@ ParseResult parse(const QByteArray & json) {
 		p.pos = QPointF(o.value("x").toDouble(), o.value("y").toDouble());
 		p.rotate = o.value("rotate").toInt();
 		p.label = o.value("label").toString();
-		if (p.id.isEmpty() || p.part.isEmpty()) return {{}, "every part needs an \"id\" and a \"part\""};
+		const QJsonObject generic = o.value("generic").toObject();
+		p.generic.title = generic.value("title").toString();
+		for (const QJsonValue & pin : generic.value("pins").toArray()) p.generic.pins << pin.toString();
+		if (p.id.isEmpty() || (p.part.isEmpty() && generic.isEmpty())) return {{}, "every part needs an \"id\" and a \"part\" (or \"generic\")"};
+		if (p.part.isEmpty() && p.generic.pins.isEmpty()) return {{}, QString("generic part %1 needs pins").arg(p.id)};
 		if (p.rotate % 90 != 0) return {{}, QString("part %1: rotate must be a multiple of 90").arg(p.id)};
 		s.parts << p;
 	}

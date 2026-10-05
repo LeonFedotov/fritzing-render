@@ -76,12 +76,16 @@ server.registerTool(
       parts: z
         .array(z.object({
           id: z.string().min(1),
-          part: z.string().min(1).describe('reference from search_parts'),
+          part: z.string().min(1).optional().describe('reference from search_parts'),
+          generic: z
+            .object({ title: z.string(), pins: z.array(z.string()).min(1) })
+            .optional()
+            .describe('instead of "part", for parts the libraries lack: a labelled block with header pins along its bottom'),
           x: z.number().default(0),
           y: z.number().default(0),
           rotate: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]).default(0),
           label: z.string().optional().describe('text drawn above the part'),
-        }))
+        }).refine(p => Boolean(p.part) !== Boolean(p.generic), { message: 'give each part either "part" or "generic"' }))
         .min(1),
       wires: z
         .array(z.object({

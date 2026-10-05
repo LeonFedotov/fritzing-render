@@ -43,10 +43,15 @@ struct LoadedPart {
 	QString layerId;
 	QSizeF size;  // scene units
 	QList<ConnectorPoint> connectors;
+	QString generatedSvg;  // generic parts: their drawing, in export units
 	QString error;
 };
 
 LoadedPart loadPart(const QString & fzpPath);
+
+// A labelled block with header pins (0.1 in apart) along its bottom edge,
+// for parts the libraries don't have; drawn like Fritzing's mystery part.
+LoadedPart genericPart(const sketch::Generic & generic);
 
 struct Result {
 	QString svg;

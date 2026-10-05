@@ -121,6 +121,37 @@ private Q_SLOTS:
 		QCOMPARE(ok.sketch.wires[0].color, QString("blue"));
 	}
 
+	void sketchParseAcceptsGenericParts() {
+		const auto ok = sketch::parse(J("{'parts':[{'id':'g','generic':{'title':'BLE Nano','pins':['TX','GND']}}]}"));
+		QVERIFY2(ok.error.isEmpty(), qPrintable(ok.error));
+		QCOMPARE(ok.sketch.parts[0].generic.title, QString("BLE Nano"));
+		QCOMPARE(ok.sketch.parts[0].generic.pins, QStringList({"TX", "GND"}));
+		QVERIFY(sketch::parse(J("{'parts':[{'id':'g','generic':{'title':'x','pins':[]}}]}")).error.contains("pins"));
+	}
+
+	void genericPartHasPinsAlongTheBottomAtHeaderPitch() {
+		const render::LoadedPart lp = render::genericPart({"BLE Nano relay", {"TX", "GND", "VIN"}});
+		QVERIFY(lp.error.isEmpty());
+		QCOMPARE(lp.connectors.size(), 3);
+		QCOMPARE(lp.connectors[0].name, QString("TX"));
+		QCOMPARE(lp.connectors[1].local.x() - lp.connectors[0].local.x(), 9.0);
+		QCOMPARE(lp.connectors[0].local.y(), lp.size.height());
+		QVERIFY(lp.connectors[0].found);
+		QVERIFY(fzp::findConnector(lp.part, "gnd") != nullptr);
+	}
+
+	void genericPartRendersWithItsTitleAndWires() {
+		const auto parsed = sketch::parse(J("{'margin':0, 'parts':[{'id':'g','generic':{'title':'BLE Nano relay','pins':['TX','GND']}},{'id':'b','part':'core/testpart.fzp','x':100}], 'wires':[{'from':'g.TX','to':'b.IN','color':'#123456'}]}"));
+		QVERIFY2(parsed.error.isEmpty(), qPrintable(parsed.error));
+		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QVERIFY(r.svg.contains("BLE Nano relay"));
+		const render::LoadedPart lp = render::genericPart({"BLE Nano relay", {"TX", "GND"}});
+		const QList<double> l = firstLine(r.svg, "#123456");
+		QVERIFY(qAbs(l[0] - lp.connectors[0].local.x() * 1000 / 90) < 0.01);
+		QVERIFY(qAbs(l[1] - lp.connectors[0].local.y() * 1000 / 90) < 0.01);
+	}
+
 	void wireRunsBetweenTerminals() {
 		const auto parsed = sketch::parse(J("{'margin':0, 'parts':[{'id':'a','part':'core/testpart.fzp'},{'id':'b','part':'core/testpart.fzp','x':100}], 'wires':[{'from':'a.IN','to':'b.OUT','color':'#123456'}]}"));
 		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
