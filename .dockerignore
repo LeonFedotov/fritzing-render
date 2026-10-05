@@ -1,0 +1,8 @@
+.git
+build
+vendor
+out
+out-*
+examples
+mcp/node_modules
+**/.DS_Store
