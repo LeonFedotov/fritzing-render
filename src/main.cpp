@@ -1,0 +1,179 @@
+// fritzing-render: Fritzing breadboard diagrams to SVG/PNG without the app.
+//
+//   fritzing-render render <sketch.json|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]
+//   fritzing-render search <words...> [--limit 20] [--json]
+//   fritzing-render part <fzp path | moduleId | title> [--json]
+//
+// Library roots: FRITZING_PARTS (colon-separated), else the build's vendor/.
+
+#include <QApplication>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QTextStream>
+
+#include <cstdio>
+
+#include "partlib.h"
+#include "render.h"
+#include "sketch.h"
+
+namespace {
+
+QTextStream & out() {
+	static QTextStream s(stdout);
+	return s;
+}
+
+QTextStream & err() {
+	static QTextStream s(stderr);
+	return s;
+}
+
+int usage() {
+	err() << "usage:\n"
+	         "  fritzing-render render <sketch.json|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]\n"
+	         "  fritzing-render search <words...> [--limit 20] [--json]\n"
+	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n";
+	return 2;
+}
+
+QString option(QStringList & args, const QString & name, const QString & fallback = {}) {
+	const int i = args.indexOf(name);
+	if (i < 0 || i + 1 >= args.size()) return fallback;
+	const QString v = args.at(i + 1);
+	args.remove(i, 2);
+	return v;
+}
+
+bool flag(QStringList & args, const QString & name) {
+	return args.removeAll(name) > 0;
+}
+
+QByteArray readInput(const QString & path) {
+	QFile f;
+	if (path == "-") {
+		if (!f.open(stdin, QIODevice::ReadOnly)) return {};
+	} else {
+		f.setFileName(path);
+		if (!f.open(QIODevice::ReadOnly)) return {};
+	}
+	return f.readAll();
+}
+
+QJsonObject entryJson(const partlib::Entry & e) {
+	return {{"title", e.title}, {"moduleId", e.moduleId}, {"family", e.family}, {"path", e.path},
+	        {"tags", QJsonArray::fromStringList(e.tags)}};
+}
+
+int cmdSearch(QStringList args) {
+	const int limit = option(args, "--limit", "20").toInt();
+	const bool json = flag(args, "--json");
+	if (args.isEmpty()) return usage();
+	const auto hits = partlib::search(partlib::index(partlib::defaultRoots()), args.join(' '), limit);
+	if (json) {
+		QJsonArray a;
+		for (const auto & e : hits) a << entryJson(e);
+		out() << QJsonDocument(a).toJson();
+		return 0;
+	}
+	for (const auto & e : hits) out() << e.title << "\n    " << e.path << "\n";
+	return hits.isEmpty() ? 1 : 0;
+}
+
+int cmdPart(QStringList args) {
+	const bool json = flag(args, "--json");
+	if (args.size() != 1) return usage();
+	const QStringList roots = partlib::defaultRoots();
+	const QString path = partlib::resolve(roots, partlib::index(roots), args.first());
+	if (path.isEmpty()) {
+		err() << "no part matches \"" << args.first() << "\"\n";
+		return 1;
+	}
+	const render::LoadedPart lp = render::loadPart(path);
+	if (!lp.error.isEmpty()) {
+		err() << lp.error << "\n";
+		return 1;
+	}
+	if (json) {
+		QJsonArray cons;
+		for (const auto & c : lp.connectors) {
+			cons << QJsonObject{{"id", c.id}, {"name", c.name}, {"description", c.description},
+			                    {"x", c.local.x()}, {"y", c.local.y()}, {"found", c.found}};
+		}
+		out() << QJsonDocument(QJsonObject{{"title", lp.part.title}, {"moduleId", lp.part.moduleId}, {"path", path},
+		                                   {"svg", lp.svgPath}, {"width", lp.size.width()}, {"height", lp.size.height()},
+		                                   {"connectors", cons}})
+		             .toJson();
+		return 0;
+	}
+	out() << lp.part.title << "\n  " << path << "\n  breadboard " << lp.svgPath << "\n  size "
+	      << lp.size.width() << " x " << lp.size.height() << " (90/in)\n";
+	for (const auto & c : lp.connectors) {
+		out() << QString("  %1  %2  (%3, %4)%5\n")
+		             .arg(c.id, -12)
+		             .arg(c.name, -14)
+		             .arg(c.local.x(), 0, 'f', 1)
+		             .arg(c.local.y(), 0, 'f', 1)
+		             .arg(c.found ? "" : "  [no breadboard geometry]");
+	}
+	return 0;
+}
+
+int cmdRender(QStringList args) {
+	const QString svgOut = option(args, "-o");
+	const QString pngOut = option(args, "--png");
+	const double ppi = option(args, "--ppi", "150").toDouble();
+	const bool transparent = flag(args, "--transparent");
+	if (args.size() != 1) return usage();
+	const QByteArray input = readInput(args.first());
+	if (input.isEmpty()) {
+		err() << "cannot read " << args.first() << "\n";
+		return 1;
+	}
+	const sketch::ParseResult parsed = sketch::parse(input);
+	if (!parsed.error.isEmpty()) {
+		err() << parsed.error << "\n";
+		return 1;
+	}
+	const QStringList roots = partlib::defaultRoots();
+	const render::Result r = render::renderSketch(parsed.sketch, roots, partlib::index(roots));
+	if (!r.error.isEmpty()) {
+		err() << r.error << "\n";
+		return 1;
+	}
+	for (const QString & w : r.warnings) err() << "warning: " << w << "\n";
+	if (svgOut.isEmpty() && pngOut.isEmpty()) {
+		out() << r.svg;
+		return 0;
+	}
+	if (!svgOut.isEmpty()) {
+		QFile f(svgOut);
+		if (!f.open(QIODevice::WriteOnly) || f.write(r.svg.toUtf8()) < 0) {
+			err() << "cannot write " << svgOut << "\n";
+			return 1;
+		}
+	}
+	if (!pngOut.isEmpty() && !render::rasterize(r.svg, r.size, ppi, transparent).save(pngOut)) {
+		err() << "cannot write " << pngOut << "\n";
+		return 1;
+	}
+	return 0;
+}
+
+}  // namespace
+
+int main(int argc, char * argv[]) {
+	// No window system needed: Qt's offscreen platform still gives fonts and painting.
+	if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) qputenv("QT_QPA_PLATFORM", "offscreen");
+	if (qEnvironmentVariableIsEmpty("QT_LOGGING_RULES")) qputenv("QT_LOGGING_RULES", "qt.qpa.fonts=false");
+	QApplication app(argc, argv);
+	QStringList args = app.arguments().mid(1);
+	if (args.isEmpty()) return usage();
+	const QString cmd = args.takeFirst();
+	if (cmd == "render") return cmdRender(args);
+	if (cmd == "search") return cmdSearch(args);
+	if (cmd == "part") return cmdPart(args);
+	return usage();
+}

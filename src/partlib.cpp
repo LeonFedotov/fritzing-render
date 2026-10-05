@@ -1,0 +1,129 @@
+#include "partlib.h"
+
+#include <QDir>
+#include <QDirIterator>
+#include <QFile>
+#include <QFileInfo>
+#include <QXmlStreamReader>
+
+#include <algorithm>
+
+namespace partlib {
+
+namespace {
+
+// Header fields only; stops at <views>, so indexing stays fast.
+Entry readEntry(const QString & path) {
+	Entry e;
+	e.path = path;
+	QFile file(path);
+	if (!file.open(QIODevice::ReadOnly)) return e;
+	QXmlStreamReader xml(&file);
+	bool inFamily = false;
+	while (!xml.atEnd()) {
+		xml.readNext();
+		if (!xml.isStartElement()) continue;
+		const auto name = xml.name();
+		if (name == QLatin1String("module")) {
+			e.moduleId = xml.attributes().value("moduleId").toString();
+		} else if (name == QLatin1String("title")) {
+			e.title = xml.readElementText().trimmed();
+		} else if (name == QLatin1String("tag")) {
+			e.tags << xml.readElementText().trimmed();
+		} else if (name == QLatin1String("property")) {
+			inFamily = xml.attributes().value("name").compare(QLatin1String("family"), Qt::CaseInsensitive) == 0;
+			const QString text = xml.readElementText().trimmed();
+			if (inFamily) e.family = text;
+		} else if (name == QLatin1String("views") || name == QLatin1String("connectors")) {
+			break;
+		}
+	}
+	return e;
+}
+
+QString haystack(const Entry & e) {
+	return QStringList{e.title, e.moduleId, e.family, e.tags.join(' '), QFileInfo(e.path).completeBaseName()}
+	    .join(' ')
+	    .toLower();
+}
+
+}  // namespace
+
+QStringList defaultRoots() {
+	const QString env = qEnvironmentVariable("FRITZING_PARTS");
+	if (!env.isEmpty()) return env.split(':', Qt::SkipEmptyParts);
+	const QString vendor = QStringLiteral(FR_VENDOR_DIR);
+	return {vendor + "/fritzing-parts", vendor + "/adafruit-parts"};
+}
+
+QList<Entry> index(const QStringList & roots) {
+	QList<Entry> out;
+	for (const QString & root : roots) {
+		QDirIterator it(root, {"*.fzp"}, QDir::Files, QDirIterator::Subdirectories);
+		while (it.hasNext()) {
+			const QString path = it.next();
+			if (path.contains("/obsolete/") || path.contains("/svg/")) continue;
+			out << readEntry(path);
+		}
+	}
+	return out;
+}
+
+QList<Entry> search(const QList<Entry> & entries, const QString & query, int limit) {
+	const QStringList words = query.toLower().split(' ', Qt::SkipEmptyParts);
+	QList<QPair<int, Entry>> scored;
+	for (const Entry & e : entries) {
+		const QString hay = haystack(e);
+		const bool all = std::all_of(words.begin(), words.end(), [&](const QString & w) { return hay.contains(w); });
+		if (!all) continue;
+		const QString title = e.title.toLower();
+		const int titleHits = static_cast<int>(std::count_if(words.begin(), words.end(), [&](const QString & w) { return title.contains(w); }));
+		const int core = e.path.contains("/core/") ? 1 : 0;
+		scored << qMakePair(titleHits * 10 + core * 2 - static_cast<int>(title.size() / 40), e);
+	}
+	std::stable_sort(scored.begin(), scored.end(), [](const auto & a, const auto & b) { return a.first > b.first; });
+	QList<Entry> out;
+	for (int i = 0; i < scored.size() && i < limit; i++) out << scored[i].second;
+	return out;
+}
+
+QString resolve(const QStringList & roots, const QList<Entry> & entries, const QString & ref) {
+	if (QFileInfo::exists(ref) && ref.endsWith(".fzp")) return QFileInfo(ref).absoluteFilePath();
+	for (const QString & root : roots) {
+		const QString p = QDir(root).filePath(ref);
+		if (QFileInfo::exists(p)) return QFileInfo(p).absoluteFilePath();
+	}
+	for (const Entry & e : entries) {
+		if (e.moduleId == ref) return e.path;
+	}
+	for (const Entry & e : entries) {
+		if (e.title.compare(ref, Qt::CaseInsensitive) == 0) return e.path;
+	}
+	return {};
+}
+
+QString imagePath(const fzp::Part & part, const QString & viewName) {
+	const QString image = part.views.value(viewName).image;
+	if (image.isEmpty()) return {};
+	const QFileInfo fzpInfo(part.path);
+	const QDir dir = fzpInfo.dir();
+
+	// fritzing-parts: <root>/<folder>/X.fzp -> <root>/svg/<folder>/<image>
+	QDir root = dir;
+	const QString folder = dir.dirName();
+	if (root.cdUp()) {
+		const QString p = root.filePath("svg/" + folder + "/" + image);
+		if (QFileInfo::exists(p)) return p;
+		for (const QString & f : {"core", "contrib", "user", "obsolete"}) {
+			const QString q = root.filePath(QString("svg/%1/%2").arg(f, image));
+			if (QFileInfo::exists(q)) return q;
+		}
+	}
+	// unpacked .fzpz: "breadboard/Y.svg" -> svg.breadboard.Y.svg beside the fzp
+	const QString flat = "svg." + QString(image).replace('/', '.');
+	if (QFileInfo::exists(dir.filePath(flat))) return dir.filePath(flat);
+	if (QFileInfo::exists(dir.filePath(image))) return dir.filePath(image);
+	return {};
+}
+
+}  // namespace partlib

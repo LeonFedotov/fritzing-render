@@ -11,7 +11,7 @@ Fritzing exports a view by taking each part's SVG for that view, scaling it to
 the export DPI, placing it, and appending the wires
 (`SketchWidget::renderToSVG` in fritzing-app). This project compiles the
 self-contained part of that pipeline straight from a
-[fritzing-app](https://github.com/fritzing/fritzing-app) checkout (13 source
+[fritzing-app](https://github.com/fritzing/fritzing-app) checkout (14 source
 files: `SvgFileSplitter`, `FSvgRenderer`, `TextUtils`, `GraphicsUtils`, the SVG
 path parser and helpers) and replaces the parts that pull in the whole
 application (the part model, wires, the sketch canvas) with a small

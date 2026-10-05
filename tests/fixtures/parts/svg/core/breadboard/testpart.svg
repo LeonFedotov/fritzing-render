@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns='http://www.w3.org/2000/svg' width='0.4in' height='0.2in' viewBox='0 0 400 200'>
+ <g id='breadboard'>
+  <rect x='0' y='0' width='400' height='200' fill='#cccccc'/>
+  <rect id='connector0pin' x='40' y='150' width='20' height='20' fill='#888888'/>
+  <rect id='connector1pin' x='340' y='150' width='20' height='20' fill='#888888'/>
+  <rect id='connector1terminal' x='345' y='195' width='10' height='5' fill='none'/>
+ </g>
+</svg>
