@@ -1,2 +1,3 @@
+# esbuild ships its binary in an optional dependency; its install script is not needed.
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: false
