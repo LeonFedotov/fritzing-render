@@ -19,8 +19,9 @@ docker pull ghcr.io/leonfedotov/fritzing-render
 
 For linux/amd64 and linux/arm64, with Fritzing's core parts (obsolete ones
 too, for old sketches), the libraries under `libraries/` (Adafruit, SparkFun,
-mgesteiro, DIP ICs, Elegoo) and the community parts listed under [Licence](#licence). (Seeed's library is
-used by local builds but left out of the image: it states no licence.)
+mgesteiro, DIP ICs, Elegoo, mkjanke) and the community parts listed under [Licence](#licence). (Seeed's library and
+the WeMos D1 mini shields are used by local builds but left out of the image:
+they state no licence.)
 With no arguments it runs the MCP server on stdio; `render`, `search` and
 `part` run the CLI, in `/work`:
 
@@ -187,7 +188,8 @@ The breadboard and schematic views are rendered; the PCB view is not, yet.
 ## Build
 
 Clone with `--recurse-submodules`: the parts libraries (Adafruit, SparkFun,
-Seeed, mgesteiro, DIP ICs, Elegoo, fritzing-parts-extra) are submodules under `libraries/`
+Seeed, mgesteiro, DIP ICs, Elegoo, mkjanke, WeMos D1 mini shields,
+fritzing-parts-extra) are submodules under `libraries/`
 (`fetch-vendor.sh` initializes them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
 reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 (or `-DFRITZING_APP=...`). Or build the image: `docker build -t fritzing-render .`
@@ -288,6 +290,8 @@ including the examples here, are under their own terms:
 - [mgesteiro/fritzing-parts](https://github.com/mgesteiro/fritzing-parts) (SCD30, VL53L0X, 28BYJ-48, NodeMCU v3, ...): CC BY-SA 4.0, submodule
 - [Adr-hyng/74LS-Series-Fritzing-Parts](https://github.com/Adr-hyng/74LS-Series-Fritzing-Parts) (74LS-series and other DIP ICs): CC BY-SA 3.0, submodule
 - [marcinwisniowski/ElegooFritzingBin](https://github.com/marcinwisniowski/ElegooFritzingBin) (KY-0xx sensor modules, 28BYJ-48, MAX7219): MIT, submodule
+- [mkjanke/Fritzing-Parts](https://github.com/mkjanke/Fritzing-Parts) (ESP32-C3 DevKitC/DevKitM, M5Stamp Pico/S3): GPL-3.0, submodule
+- [mcauser/Fritzing-Part-WeMos-D1-mini-Shields](https://github.com/mcauser/Fritzing-Part-WeMos-D1-mini-Shields) (WeMos D1 mini shields): no stated licence, submodule; not in the Docker image
 - [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
 - [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
 - DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched

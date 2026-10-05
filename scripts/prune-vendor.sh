@@ -18,7 +18,7 @@ find fritzing-parts/svg -mindepth 3 -type f \( -path '*/pcb/*' -o -path '*/icon/
   grep -qxF "$rel" "$refs" || rm -f "$f"
 done
 # unpacked .fzpz: svg.<view>.<file> beside the part
-for d in adafruit-parts sparkfun-parts seeed-parts mgesteiro-parts dip-ic-parts elegoo-parts community-parts; do [ -d "$d" ] && echo "$d"; done |
+for d in adafruit-parts sparkfun-parts seeed-parts mgesteiro-parts dip-ic-parts elegoo-parts mkjanke-parts wemos-shields-parts community-parts; do [ -d "$d" ] && echo "$d"; done |
   xargs -I{} find {} -type f \( -name 'svg.pcb.*' -o -name 'svg.icon.*' \) | while read -r f; do
   rel=$(basename "$f" | sed 's/^svg\.\([a-z]*\)\./\1\//')
   grep -qxF "$rel" "$refs" || rm -f "$f"

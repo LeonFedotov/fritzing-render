@@ -53,7 +53,8 @@ QStringList defaultRoots() {
 	if (!env.isEmpty()) return env.split(':', Qt::SkipEmptyParts);
 	const QString vendor = QStringLiteral(FR_VENDOR_DIR);
 	return {vendor + "/fritzing-parts", vendor + "/adafruit-parts", vendor + "/sparkfun-parts", vendor + "/seeed-parts",
-	        vendor + "/mgesteiro-parts", vendor + "/dip-ic-parts", vendor + "/elegoo-parts", vendor + "/community-parts",
+	        vendor + "/mgesteiro-parts", vendor + "/dip-ic-parts", vendor + "/elegoo-parts", vendor + "/mkjanke-parts",
+	        vendor + "/wemos-shields-parts", vendor + "/community-parts",
 	        QStringLiteral(FR_PARTS_DIR)};
 }
 

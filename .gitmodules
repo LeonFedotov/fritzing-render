@@ -26,3 +26,11 @@
 	path = libraries/elegoo
 	url = https://github.com/marcinwisniowski/ElegooFritzingBin.git
 	shallow = true
+[submodule "libraries/mkjanke"]
+	path = libraries/mkjanke
+	url = https://github.com/mkjanke/Fritzing-Parts.git
+	shallow = true
+[submodule "libraries/wemos-d1-mini-shields"]
+	path = libraries/wemos-d1-mini-shields
+	url = https://github.com/mcauser/Fritzing-Part-WeMos-D1-mini-Shields.git
+	shallow = true

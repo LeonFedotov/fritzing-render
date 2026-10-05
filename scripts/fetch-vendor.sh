@@ -3,7 +3,8 @@
 # svgpp (header-only, used by Fritzing's TextUtils) and the parts libraries.
 # Fritzing's own sources are compiled in place from FRITZING_APP (default ../fritzing-app).
 # The parts libraries are submodules under libraries/: Adafruit's,
-# SparkFun's, Seeed's, mgesteiro's, Adr-hyng's DIP ICs, Elegoo's kit bin, and
+# SparkFun's, Seeed's, mgesteiro's, Adr-hyng's DIP ICs, Elegoo's kit bin,
+# mkjanke's ESP32 boards, mcauser's WeMos D1 mini shields, and
 # fritzing-parts-extra (parts drawn for boards no library has).
 set -e
 cd "$(dirname "$0")/.."
@@ -40,6 +41,8 @@ unpack_tree() {  # <library> <destination> [bins]
 unpack_tree ../libraries/seeed seeed-parts bins
 unpack_tree ../libraries/mgesteiro mgesteiro-parts
 unpack_tree ../libraries/dip-ics dip-ic-parts
+unpack_tree ../libraries/mkjanke mkjanke-parts
+unpack_tree ../libraries/wemos-d1-mini-shields wemos-shields-parts
 # Elegoo's bin is loose parts already laid out like an unpacked .fzpz.
 if [ -d ../libraries/elegoo/bin ] && [ ! -d elegoo-parts ]; then cp -R ../libraries/elegoo/bin elegoo-parts; fi
 
