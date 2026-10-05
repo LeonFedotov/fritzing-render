@@ -1,6 +1,6 @@
 vendor/
 build/
 out/
-node_modules/
 .DS_Store
 out-*
+mcp/node_modules/

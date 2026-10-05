@@ -81,6 +81,15 @@ private Q_SLOTS:
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "nothing like it").isEmpty());
 	}
 
+	void refIsRelativeToItsRoot() {
+		QCOMPARE(partlib::ref(FixtureRoots, Fixtures + "/parts/core/testpart.fzp"), QString("core/testpart.fzp"));
+		QCOMPARE(partlib::ref(FixtureRoots, Fixtures + "/fzpz/part.flat.fzp"), QString("part.flat.fzp"));
+		QCOMPARE(partlib::ref(FixtureRoots, "/elsewhere/x.fzp"), QString("/elsewhere/x.fzp"));
+		// and it resolves back to the same part
+		const auto entries = partlib::index(FixtureRoots);
+		QVERIFY(partlib::resolve(FixtureRoots, entries, partlib::ref(FixtureRoots, Fixtures + "/fzpz/part.flat.fzp")).endsWith("part.flat.fzp"));
+	}
+
 	void searchNeedsEveryWord() {
 		const auto entries = partlib::index(FixtureRoots);
 		QCOMPARE(partlib::search(entries, "flat part", 10).size(), 1);

@@ -35,6 +35,10 @@ QList<Entry> search(const QList<Entry> & entries, const QString & query, int lim
 // to a root, a moduleId, or an exact title. Empty if nothing matches.
 QString resolve(const QStringList & roots, const QList<Entry> & entries, const QString & ref);
 
+// The shortest reference that resolve() maps back to `path`: the path
+// relative to the first root containing it, else `path` itself.
+QString ref(const QStringList & roots, const QString & path);
+
 // The SVG file for one view of a part (e.g. "breadboardView"), or empty.
 QString imagePath(const fzp::Part & part, const QString & viewName);
 

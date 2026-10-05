@@ -62,8 +62,8 @@ QByteArray readInput(const QString & path) {
 	return f.readAll();
 }
 
-QJsonObject entryJson(const partlib::Entry & e) {
-	return {{"title", e.title}, {"moduleId", e.moduleId}, {"family", e.family}, {"path", e.path},
+QJsonObject entryJson(const partlib::Entry & e, const QStringList & roots) {
+	return {{"title", e.title}, {"ref", partlib::ref(roots, e.path)}, {"moduleId", e.moduleId}, {"family", e.family}, {"path", e.path},
 	        {"tags", QJsonArray::fromStringList(e.tags)}};
 }
 
@@ -71,14 +71,15 @@ int cmdSearch(QStringList args) {
 	const int limit = option(args, "--limit", "20").toInt();
 	const bool json = flag(args, "--json");
 	if (args.isEmpty()) return usage();
-	const auto hits = partlib::search(partlib::index(partlib::defaultRoots()), args.join(' '), limit);
+	const QStringList roots = partlib::defaultRoots();
+	const auto hits = partlib::search(partlib::index(roots), args.join(' '), limit);
 	if (json) {
 		QJsonArray a;
-		for (const auto & e : hits) a << entryJson(e);
+		for (const auto & e : hits) a << entryJson(e, roots);
 		out() << QJsonDocument(a).toJson();
 		return 0;
 	}
-	for (const auto & e : hits) out() << e.title << "\n    " << e.path << "\n";
+	for (const auto & e : hits) out() << e.title << "\n    " << partlib::ref(roots, e.path) << "\n";
 	return hits.isEmpty() ? 1 : 0;
 }
 
@@ -102,7 +103,7 @@ int cmdPart(QStringList args) {
 			cons << QJsonObject{{"id", c.id}, {"name", c.name}, {"description", c.description},
 			                    {"x", c.local.x()}, {"y", c.local.y()}, {"found", c.found}};
 		}
-		out() << QJsonDocument(QJsonObject{{"title", lp.part.title}, {"moduleId", lp.part.moduleId}, {"path", path},
+		out() << QJsonDocument(QJsonObject{{"title", lp.part.title}, {"ref", partlib::ref(roots, path)}, {"moduleId", lp.part.moduleId}, {"path", path},
 		                                   {"svg", lp.svgPath}, {"width", lp.size.width()}, {"height", lp.size.height()},
 		                                   {"connectors", cons}})
 		             .toJson();

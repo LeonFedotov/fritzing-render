@@ -1,7 +1,6 @@
 #include "partlib.h"
 
 #include <QDir>
-#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QXmlStreamReader>
@@ -56,16 +55,21 @@ QStringList defaultRoots() {
 	return {vendor + "/fritzing-parts", vendor + "/adafruit-parts"};
 }
 
+// .fzp files under `dir`, not descending into svg/ (thousands of drawings,
+// no part files), obsolete/ or hidden folders.
+void collect(const QDir & dir, int depth, QList<Entry> & out) {
+	for (const QFileInfo & f : dir.entryInfoList({"*.fzp"}, QDir::Files)) out << readEntry(f.absoluteFilePath());
+	if (depth == 0) return;
+	for (const QFileInfo & d : dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+		const QString name = d.fileName();
+		if (name == "svg" || name == "obsolete" || name.startsWith('.')) continue;
+		collect(QDir(d.absoluteFilePath()), depth - 1, out);
+	}
+}
+
 QList<Entry> index(const QStringList & roots) {
 	QList<Entry> out;
-	for (const QString & root : roots) {
-		QDirIterator it(root, {"*.fzp"}, QDir::Files, QDirIterator::Subdirectories);
-		while (it.hasNext()) {
-			const QString path = it.next();
-			if (path.contains("/obsolete/") || path.contains("/svg/")) continue;
-			out << readEntry(path);
-		}
-	}
+	for (const QString & root : roots) collect(QDir(root), 3, out);
 	return out;
 }
 
@@ -100,6 +104,15 @@ QString resolve(const QStringList & roots, const QList<Entry> & entries, const Q
 		if (e.title.compare(ref, Qt::CaseInsensitive) == 0) return e.path;
 	}
 	return {};
+}
+
+QString ref(const QStringList & roots, const QString & path) {
+	const QString abs = QFileInfo(path).absoluteFilePath();
+	for (const QString & root : roots) {
+		const QString r = QFileInfo(root).absoluteFilePath() + "/";
+		if (abs.startsWith(r)) return abs.mid(r.size());
+	}
+	return path;
 }
 
 QString imagePath(const fzp::Part & part, const QString & viewName) {
