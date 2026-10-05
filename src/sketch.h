@@ -108,6 +108,7 @@ struct Sketch {
 	double margin = 18;
 	QString view = BreadboardView;  // which of a part's views is drawn
 	QList<QPointF> dots;            // schematic junction dots, scene
+	QString style = "fritzing";     // schematic theme: "fritzing", or "modern" (render.cpp)
 };
 
 struct ParseResult {

@@ -5,9 +5,11 @@
 #include <QFile>
 #include <QPainter>
 #include <QSvgRenderer>
+#include <QTextStream>
 #include <QTransform>
 
 #include <algorithm>
+#include <cmath>
 
 #include "connectors/svgidlayer.h"
 #include "fsvgrenderer.h"
@@ -182,6 +184,135 @@ QString partSvg(const LoadedPart & lp, const QString & fill, QString & error) {
 
 double toExport(double scene) { return scene * ExportDpi / SceneDpi; }
 
+// The "modern" schematic look, on Fritzing's own symbols: component bodies
+// filled and outlined heavier with rounded corners, every line at least a
+// readable weight, pins in slate, larger sans-serif text, traces in one
+// blue with large junction dots, net labels as filled tags, power symbols
+// in red, reference labels as badges, and a 0.1 in dot grid.
+struct Theme {
+	bool on = false;
+	QString ink = "#0f172a";
+	QString pin = "#64748b";
+	QString pinText = "#475569";
+	QString bodyFill = "#f1f5f9";
+	QString wire = "#2563eb";
+	QString power = "#dc2626";
+	QString badgeFill = "#e0e7ff";
+	QString badgeText = "#3730a3";
+	QString grid = "#cbd5e1";
+	QString font = "Noto Sans, Helvetica, Arial, sans-serif";
+	double wireWidth = 1.8;   // scene units, 20 mil
+	double dotRadius = 2.8;
+	// in a part's drawing (export units, 1000 per inch)
+	double bodyStroke = 22;
+	double inkStroke = 14;
+	double pinStroke = 11;
+	double cornerRadius = 25;
+	double textScale = 1.15;
+};
+
+Theme themeFor(const sketch::Sketch & sk) {
+	Theme t;
+	t.on = sk.view == SchematicView && sk.style == "modern";
+	return t;
+}
+
+// What a part is to the theme.
+enum class Symbol { Part, NetLabel, Power, Ground };
+
+Symbol symbolKind(const QString & moduleId) {
+	if (moduleId.startsWith("netlabel_")) return Symbol::NetLabel;
+	if (moduleId == "PowerLabelModuleID" || moduleId == "JustPowerModuleID" || moduleId == "PowerModuleID") return Symbol::Power;
+	if (moduleId == "GroundModuleID") return Symbol::Ground;
+	return Symbol::Part;
+}
+
+// How a color reads in a Fritzing schematic: dark ink, grey (pins and their
+// text), or neither (white, colors, paint servers, none).
+enum class Tone { Ink, Grey, Other };
+
+Tone tone(const QString & value) {
+	const QString v = value.trimmed();
+	if (v.isEmpty() || v == "none" || v.startsWith("url")) return Tone::Other;
+	const QColor c(v);
+	if (!c.isValid() || c.hsvSaturation() > 60 || c.lightness() >= 230) return Tone::Other;
+	return c.lightness() < 90 ? Tone::Ink : Tone::Grey;
+}
+
+double number(const QString & v, double fallback) {
+	bool ok = false;
+	const double d = QString(v).remove("px").toDouble(&ok);
+	return ok ? d : fallback;
+}
+
+void restyleElement(QDomElement e, const Theme & t, Symbol kind) {
+	// fold style declarations into attributes, so the rules below see them
+	if (e.hasAttribute("style")) {
+		QStringList keep;
+		for (const QString & d : e.attribute("style").split(';', Qt::SkipEmptyParts)) {
+			const QString key = d.section(':', 0, 0).trimmed();
+			const QString value = d.section(':', 1).trimmed();
+			if (key == "stroke" || key == "fill" || key == "stroke-width" || key == "font-size" || key == "font-family" || key == "font-weight") e.setAttribute(key, value);
+			else keep << d;
+		}
+		if (keep.isEmpty()) e.removeAttribute("style");
+		else e.setAttribute("style", keep.join(';'));
+	}
+	const QString tag = e.tagName();
+	const bool isText = tag == "text" || tag == "tspan";
+	const Tone strokeTone = tone(e.attribute("stroke"));
+	const Tone fillTone = tone(e.attribute("fill"));
+	const bool stroked = e.hasAttribute("stroke") && e.attribute("stroke") != "none";
+
+	if (isText) {
+		e.setAttribute("font-family", t.font);
+		if (e.hasAttribute("font-size")) e.setAttribute("font-size", QString::number(number(e.attribute("font-size"), 0) * t.textScale));
+		QString fill = fillTone == Tone::Grey ? t.pinText : t.ink;
+		if (fillTone == Tone::Other && e.hasAttribute("fill")) fill = e.attribute("fill");
+		if (kind == Symbol::NetLabel) {
+			fill = "#ffffff";
+			e.setAttribute("font-weight", "600");
+		}
+		if (kind == Symbol::Power) fill = t.power;
+		e.setAttribute("fill", fill);
+	} else {
+		const bool body = tag == "rect" && stroked && number(e.attribute("width"), 0) >= 150 && number(e.attribute("height"), 0) >= 150;
+		if (kind == Symbol::NetLabel) {
+			if (stroked) e.setAttribute("stroke", t.wire);
+			if (tag == "polygon") e.setAttribute("fill", t.wire);
+		} else if (kind == Symbol::Power) {
+			if (stroked && strokeTone != Tone::Other) e.setAttribute("stroke", t.power);
+			if (fillTone == Tone::Ink) e.setAttribute("fill", t.power);
+		} else if (body) {
+			e.setAttribute("stroke", t.ink);
+			e.setAttribute("stroke-width", QString::number(qMax(number(e.attribute("stroke-width"), 1), t.bodyStroke)));
+			if (fillTone != Tone::Other || !e.hasAttribute("fill") || e.attribute("fill") == "none" || QColor(e.attribute("fill")) == Qt::white) e.setAttribute("fill", t.bodyFill);
+			e.setAttribute("rx", QString::number(t.cornerRadius));
+		} else {
+			if (stroked && strokeTone != Tone::Other) {
+				const bool grey = strokeTone == Tone::Grey;
+				e.setAttribute("stroke", grey ? t.pin : t.ink);
+				e.setAttribute("stroke-width", QString::number(qMax(number(e.attribute("stroke-width"), 1), grey ? t.pinStroke : t.inkStroke)));
+				e.setAttribute("stroke-linecap", "round");
+				e.setAttribute("stroke-linejoin", "round");
+			}
+			if (fillTone == Tone::Ink) e.setAttribute("fill", t.ink);
+			else if (fillTone == Tone::Grey) e.setAttribute("fill", t.pin);
+		}
+	}
+	for (QDomElement c = e.firstChildElement(); !c.isNull(); c = c.nextSiblingElement()) restyleElement(c, t, kind);
+}
+
+QString restyled(const QString & fragment, const Theme & t, Symbol kind) {
+	QDomDocument doc;
+	if (!doc.setContent("<svg xmlns='http://www.w3.org/2000/svg'>" + fragment + "</svg>")) return fragment;
+	restyleElement(doc.documentElement(), t, kind);
+	QString out;
+	QTextStream s(&out);
+	for (QDomNode n = doc.documentElement().firstChild(); !n.isNull(); n = n.nextSibling()) n.save(s, 0);
+	return out;
+}
+
 QString labelSvg(const QString & text, QPointF scenePos) {
 	return QString("<text x='%1' y='%2' font-family='Droid Sans, Helvetica, Arial, sans-serif' font-size='%3' fill='#333333'>%4</text>")
 	    .arg(toExport(scenePos.x()))
@@ -191,14 +322,31 @@ QString labelSvg(const QString & text, QPointF scenePos) {
 }
 
 // PartLabel::makeSvgAux: a line per entry, the first a font size below the
-// label's top-left corner, in Droid Sans.
-QString placedLabelSvg(const QString & text, QPointF topLeft, double size, const QString & color) {
-	QString out = QString("<g font-family='Droid Sans, Helvetica, Arial, sans-serif' font-size='%1' fill='%2'>")
-	                  .arg(toExport(size))
-	                  .arg(color.isEmpty() ? "#000000" : color);
+// label's top-left corner, in Droid Sans. The theme sets the first line,
+// the reference, in a badge, and the values in its face and grey.
+QString placedLabelSvg(const QString & text, QPointF topLeft, double size, const QString & color, const Theme & t) {
 	const QStringList lines = text.split('\n');
+	QString out;
+	if (t.on) {
+		const double badgeW = lines.value(0).size() * size * 0.62 + size * 0.7;
+		out += QString("<rect x='%1' y='%2' width='%3' height='%4' rx='%5' fill='%6'/>")
+		           .arg(toExport(topLeft.x() - size * 0.35))
+		           .arg(toExport(topLeft.y() + size * 0.08))
+		           .arg(toExport(badgeW))
+		           .arg(toExport(size * 1.22))
+		           .arg(toExport(size * 0.35))
+		           .arg(t.badgeFill);
+	}
+	out += QString("<g font-family='%3' font-size='%1' fill='%2'>")
+	           .arg(toExport(size))
+	           .arg(t.on ? t.pinText : (color.isEmpty() ? "#000000" : color))
+	           .arg(t.on ? t.font : "Droid Sans, Helvetica, Arial, sans-serif");
 	for (int i = 0; i < lines.size(); i++) {
-		out += QString("<text x='%1' y='%2'>%3</text>").arg(toExport(topLeft.x())).arg(toExport(topLeft.y() + size * (i + 1))).arg(lines[i].toHtmlEscaped());
+		out += QString("<text x='%1' y='%2'%4>%3</text>")
+		           .arg(toExport(topLeft.x()))
+		           .arg(toExport(topLeft.y() + size * (i + 1) + (t.on && i > 0 ? size * 0.25 : 0)))
+		           .arg(lines[i].toHtmlEscaped())
+		           .arg(t.on && i == 0 ? QString(" font-weight='700' fill='%1'").arg(t.badgeText) : QString());
 	}
 	return out + "</g>";
 }
@@ -452,11 +600,23 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 	bounds.adjust(-sk.margin, -sk.margin, sk.margin, sk.margin);
 	const QPointF offset = bounds.topLeft();
 
+	const Theme theme = themeFor(sk);
 	QString out = TextUtils::makeSVGHeader(SceneDpi, ExportDpi, bounds.width(), bounds.height());
+	if (theme.on) {
+		// a dot every 0.1 in of the scene, as schematic editors show their grid
+		out += QString("<rect x='0' y='0' width='%1' height='%2' fill='#ffffff'/>\n<g fill='%3'>").arg(toExport(bounds.width())).arg(toExport(bounds.height())).arg(theme.grid);
+		for (double x = std::ceil(bounds.left() / 9) * 9; x <= bounds.right(); x += 9) {
+			for (double y = std::ceil(bounds.top() / 9) * 9; y <= bounds.bottom(); y += 9) {
+				out += QString("<circle cx='%1' cy='%2' r='%3'/>").arg(toExport(x - offset.x())).arg(toExport(y - offset.y())).arg(toExport(0.45));
+			}
+		}
+		out += "</g>\n";
+	}
 	for (const QString & id : order) {
 		const Placed & p = placed[id];
 		QString err;
-		const QString svg = partSvg(p.loaded, resolveColor(p.spec.color), err);
+		QString svg = partSvg(p.loaded, resolveColor(p.spec.color), err);
+		if (theme.on) svg = restyled(svg, theme, symbolKind(p.loaded.part.moduleId));
 		if (!err.isEmpty()) {
 			result.error = QString("part %1: %2").arg(id, err);
 			return result;
@@ -473,7 +633,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		           .arg(toExport(t.dy() - offset.y()))
 		           .arg(svg + legsSvg(p.loaded, p.spec));
 		if (p.spec.label.isEmpty()) continue;
-		out += (p.spec.labelAt ? placedLabelSvg(p.spec.label, *p.spec.labelAt - offset, p.spec.labelSize, p.spec.labelColor)
+		out += (p.spec.labelAt ? placedLabelSvg(p.spec.label, *p.spec.labelAt - offset, p.spec.labelSize, p.spec.labelColor, theme)
 		                       : labelSvg(p.spec.label, labelAnchor(p) - offset)) + "\n";
 	}
 
@@ -495,9 +655,13 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 	for (const Line & l : lines) {
 		if (l.shadow) out += stroke(l, l.width + 2, l.color.shadow);
 	}
-	for (const Line & l : lines) out += stroke(l, l.width, l.color.wire);
+	for (const Line & l : lines) out += theme.on ? stroke(l, qMax(l.width, theme.wireWidth), theme.wire) : stroke(l, l.width, l.color.wire);
 	for (const QPointF & d : sk.dots) {
-		out += QString("<circle fill='black' cx='%1' cy='%2' r='%3' stroke='none'/>").arg(toExport(d.x() - offset.x())).arg(toExport(d.y() - offset.y())).arg(toExport(dotRadius));
+		out += QString("<circle fill='%4' cx='%1' cy='%2' r='%3' stroke='none'/>")
+		           .arg(toExport(d.x() - offset.x()))
+		           .arg(toExport(d.y() - offset.y()))
+		           .arg(toExport(theme.on ? theme.dotRadius : dotRadius))
+		           .arg(theme.on ? theme.wire : "black");
 	}
 	out += "</g>\n</svg>\n";
 

@@ -9,6 +9,7 @@ import {
   formatPart,
   formatSearch,
   parseWarnings,
+  DefaultPpi,
   renderArgs,
   renderDiagram,
   renderSketchFile,
@@ -32,6 +33,12 @@ test('renderArgs writes both files and passes ppi and transparency', () => {
   ])
   assert.deepEqual(renderArgs({ sketchFile: 's.json', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: true }).at(-1), '--transparent')
   assert.deepEqual(renderArgs({ sketchFile: 's.fzz', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: false, view: 'schematic' }).slice(-2), ['--view', 'schematic'])
+  assert.deepEqual(renderArgs({ sketchFile: 's.fzz', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: false, view: 'schematic', theme: 'modern' }).slice(-4), ['--view', 'schematic', '--theme', 'modern'])
+  assert.ok(!renderArgs({ sketchFile: 's.fzz', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: false, theme: 'fritzing' }).includes('--theme'))
+})
+
+test('renders at 300 ppi unless told otherwise', () => {
+  assert.equal(DefaultPpi, 300)
 })
 
 test('parseWarnings keeps the CLI\'s warning lines', () => {
@@ -120,6 +127,8 @@ test('renders the schematic view of a .fz', { skip: !existsSync(bin) && 'build f
     const out = await renderSketchFile(bin, join(repoRoot, 'tests/fixtures/schematic.fz'), { ppi: 90, view: 'schematic' })
     assert.match(out.svg, />SDA</)
     assert.match(out.svg, /<circle/)
+    const modern = await renderSketchFile(bin, join(repoRoot, 'tests/fixtures/schematic.fz'), { ppi: 90, view: 'schematic', theme: 'modern' })
+    assert.match(modern.svg, /#2563eb/)
   } finally {
     if (saved === undefined) delete process.env.FRITZING_PARTS
     else process.env.FRITZING_PARTS = saved

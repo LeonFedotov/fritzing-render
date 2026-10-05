@@ -139,9 +139,11 @@ those pieces are reimplemented in `src/`, following the originals:
 - `partlib.cpp`: finding parts and their SVGs in the libraries
 - `render.cpp`: the compose loop, wires (`Wire::makeWireSVG`: a 2-unit line over a 4-unit shadow, colors from Fritzing's `ratsnestcolors.xml`) and unbent legs (`ConnectorItem::makeLegSvg`)
 
-![The schematic view of Fritzing's AnalogInputPot example](examples/analog-input-pot-schematic.png)
+| `--view schematic` | `--view schematic --theme modern` |
+|---|---|
+| ![The schematic of Fritzing's AnalogInputPot example, in Fritzing's look](examples/analog-input-pot-schematic.png) | ![The same schematic in the modern theme](examples/analog-input-pot-schematic-modern.png) |
 
-*The schematic view of Fritzing's own `AnalogInputPot` example sketch, as `--view schematic` draws it.*
+*The schematic view of Fritzing's own `AnalogInputPot` example sketch, in Fritzing's look and in the modern theme.*
 
 Fritzing sketches (`.fzz`, a zip of the `.fz` XML and any parts it
 bundles) are read in `fzz.cpp`, one view at a time: each breadboard-view part with its saved
@@ -154,9 +156,19 @@ Fritzing draws where three traces meet or two leave one pin. Net labels
 and power labels are drawn as Fritzing's `NetLabel` and
 `SymbolPaletteItem` draw them, with their text, and ground and power symbols
 come from Fritzing's own resources. JSON sketches have breadboard
-positions only, so they have no schematic yet ([#1](https://github.com/LeonFedotov/fritzing-render/issues/1)). Parts are found by module id, in the bundled copies first,
-then the libraries, obsolete parts included. Generic pin headers, which
-Fritzing generates rather than ships, are made from its templates
+positions only, so they have no schematic yet ([#1](https://github.com/LeonFedotov/fritzing-render/issues/1)).
+
+`--theme modern` restyles a schematic while keeping Fritzing's symbols:
+component bodies filled and outlined heavier with rounded corners, every
+line at a readable weight, slate pins, Noto Sans at a larger size, traces
+in one blue with large junction dots, net labels as filled tags, power
+symbols in red, reference designators as badges, and a 0.1 in dot grid.
+Fritzing's own look (`--theme fritzing`) is the default; the breadboard
+view has no theme.
+
+Parts are found by module id, in the bundled copies first, then the
+libraries, obsolete parts included. Generic pin headers, which Fritzing
+generates rather than ships, are made from its templates
 (`generated.cpp`). Notes, and parts no library has (DIP and mystery chips,
 stripboards), are left out with a warning.
 
@@ -193,13 +205,13 @@ cmake --build build -j
 ```sh
 build/fritzing-render search arduino nano                   # titles and the "part" ref to use
 build/fritzing-render part "core/Arduino Nano3(fix).fzp"    # size and connectors
-build/fritzing-render render examples/smoke.json -o out.svg --png out.png --ppi 200
+build/fritzing-render render examples/smoke.json -o out.svg --png out.png --ppi 600
 build/fritzing-render render ../fritzing-app/sketches/core/Button.fzz --png button.png
 build/fritzing-render render ../fritzing-app/sketches/core/Button.fzz --view schematic --png button-schematic.png
 ```
 
 `render` takes a JSON sketch, an `.fzz` or an `.fz`, told apart by their
-contents (`-` reads stdin).
+contents (`-` reads stdin). PNGs are 300 ppi unless `--ppi` says otherwise.
 
 Add `--json` to `search` and `part` for machine-readable output. Parts are
 looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
@@ -236,7 +248,8 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 `mcp/` wraps the CLI as an MCP server with four tools: `search_parts`,
 `describe_part`, `render_diagram`, which renders a diagram given as parts
 and wires, and `render_fritzing_sketch`, which renders a sketch file (`.fzz`,
-`.fz` or JSON) by path, in the breadboard or (for `.fzz`/`.fz`) schematic view. The two render tools return the PNG as an image, with
+`.fz` or JSON) by path, in the breadboard or (for `.fzz`/`.fz`) schematic view,
+in Fritzing's look or the modern `theme`. Images are 300 ppi unless `ppi` is given. The two render tools return the PNG as an image, with
 any warnings, and can save the SVG and PNG.
 
 ```sh

@@ -1,7 +1,7 @@
 // fritzing-render: Fritzing breadboard diagrams to SVG/PNG without the app.
 //
-//   fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]
-//                          [--view breadboard|schematic]
+//   fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 300] [--transparent]
+//                          [--view breadboard|schematic] [--theme fritzing|modern]
 //   fritzing-render search <words...> [--limit 20] [--json]
 //   fritzing-render part <fzp path | moduleId | title> [--json]
 //
@@ -38,8 +38,9 @@ QTextStream & err() {
 
 int usage() {
 	err() << "usage:\n"
-	         "  fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]\n"
+	         "  fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 300] [--transparent]\n"
 	         "                         [--view breadboard|schematic]   (schematic: .fzz/.fz only)\n"
+	         "                         [--theme fritzing|modern]       (the schematic's look)\n"
 	         "  fritzing-render search <words...> [--limit 20] [--json]\n"
 	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n";
 	return 2;
@@ -131,10 +132,11 @@ int cmdPart(QStringList args) {
 int cmdRender(QStringList args) {
 	const QString svgOut = option(args, "-o");
 	const QString pngOut = option(args, "--png");
-	const double ppi = option(args, "--ppi", "150").toDouble();
+	const double ppi = option(args, "--ppi", "300").toDouble();
 	const bool transparent = flag(args, "--transparent");
 	const QString viewArg = option(args, "--view", "breadboard");
-	if (args.size() != 1 || (viewArg != "breadboard" && viewArg != "schematic")) return usage();
+	const QString style = option(args, "--theme", "fritzing");
+	if (args.size() != 1 || (viewArg != "breadboard" && viewArg != "schematic") || (style != "fritzing" && style != "modern")) return usage();
 	const QString view = viewArg == "schematic" ? sketch::SchematicView : sketch::BreadboardView;
 	const QByteArray input = readInput(args.first());
 	if (input.isEmpty()) {
@@ -165,7 +167,9 @@ int cmdRender(QStringList args) {
 			return 1;
 		}
 		warnings = loaded.warnings;
-		r = render::renderSketch(loaded.sketch, roots, {});
+		sketch::Sketch sk = loaded.sketch;
+		sk.style = style;
+		r = render::renderSketch(sk, roots, {});
 	}
 	if (!r.error.isEmpty()) {
 		err() << r.error << "\n";

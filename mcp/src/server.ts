@@ -10,6 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
 import {
+  DefaultPpi,
   binaryPath,
   describePart,
   formatPart,
@@ -53,7 +54,7 @@ function imageResult(rendered: Rendered, summary: string): { content: ({ type: '
 }
 
 const imageOptions = {
-  ppi: z.number().min(30).max(600).default(150).describe('PNG resolution'),
+  ppi: z.number().min(30).max(600).default(DefaultPpi).describe('PNG resolution'),
   transparent: z.boolean().default(false),
   save_svg: z.string().optional().describe('path to also write the SVG to'),
   save_png: z.string().optional().describe('path to also write the PNG to'),
@@ -167,12 +168,14 @@ server.registerTool(
     inputSchema: {
       path: z.string().min(1).describe('the sketch file; a relative path is taken from the server\'s working directory'),
       view: z.enum(['breadboard', 'schematic']).default('breadboard'),
+      theme: z.enum(['fritzing', 'modern']).default('fritzing')
+        .describe('schematic look: Fritzing\'s own, or "modern" (filled bodies, heavier lines, one wire color, net-label tags, a dot grid)'),
       ...imageOptions,
     },
   },
-  async ({ path, view, ppi, transparent, save_svg, save_png }) => {
+  async ({ path, view, theme, ppi, transparent, save_svg, save_png }) => {
     try {
-      const out = await renderSketchFile(bin, resolve(path), { ppi, transparent, view })
+      const out = await renderSketchFile(bin, resolve(path), { ppi, transparent, view, theme })
       const saved = await save(out, save_svg, save_png)
       return imageResult(out, renderSummary(resolve(path), out, saved))
     } catch (error) {

@@ -566,6 +566,43 @@ private Q_SLOTS:
 		const render::Result r = render::renderSketch(l.sketch, roots, {});
 		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
 	}
+	void modernThemeRestylesTheSchematic() {
+		QTemporaryDir dir;
+		fzz::Loaded l = fzz::load(readFile(Fixtures + "/schematic.fz"), FixtureRoots, dir.path(), sketch::SchematicView);
+		const render::Result plain = render::renderSketch(l.sketch, FixtureRoots, {});
+		l.sketch.style = "modern";
+		const render::Result r = render::renderSketch(l.sketch, FixtureRoots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QVERIFY(!plain.svg.contains("#2563eb"));                  // Fritzing's look is the default
+		QCOMPARE(r.svg.count("stroke='#2563eb'"), 5);             // the traces, in one blue
+		QVERIFY(!r.svg.contains("stroke='#404040'"));             // not in their own colors
+		QVERIFY(r.svg.contains("fill='#e0e7ff'"));                // R1's badge
+		QVERIFY(r.svg.contains("font-family=\"Noto Sans"));      // the parts' text in the theme's face
+		QVERIFY(r.svg.count("<circle") > plain.svg.count("<circle") + 20);  // the dot grid
+		QVERIFY(r.svg.contains(QRegularExpression("<polygon[^>]*fill=\"#2563eb\"")));  // the net label, a filled tag
+		QVERIFY(r.svg.contains(QRegularExpression("<text[^>]*fill=\"#ffffff\"[^>]*>SDA<")));  // with white text
+		QVERIFY(r.svg.contains(QRegularExpression("<text[^>]*fill=\"#dc2626\"[^>]*>3.3V<")));  // the power label in red
+	}
+
+	void themeLeavesTheBreadboardAlone() {
+		fzz::Loaded l = fzz::load(readFile(Fixtures + "/sketch.fz"), FixtureRoots, {});
+		const QString plain = render::renderSketch(l.sketch, FixtureRoots, {}).svg;
+		l.sketch.style = "modern";
+		QCOMPARE(render::renderSketch(l.sketch, FixtureRoots, {}).svg, plain);
+	}
+
+	void vendorModernThemeFillsComponentBodies() {
+		const QString path = QStringLiteral(FR_FRITZING_APP) + "/sketches/core/AnalogInputPot.fzz";
+		if (!QFileInfo::exists(path) || !QFileInfo::exists(vendorPart("core"))) QSKIP("vendor parts or fritzing-app sketches missing");
+		QTemporaryDir dir;
+		const QStringList roots = partlib::defaultRoots();
+		fzz::Loaded l = fzz::load(readFile(path), roots, dir.path(), sketch::SchematicView);
+		l.sketch.style = "modern";
+		const render::Result r = render::renderSketch(l.sketch, roots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QVERIFY(r.svg.contains(QRegularExpression("<rect[^>]*fill=\"#f1f5f9\"")));  // the Arduino's body, filled
+		QVERIFY(r.svg.contains("rx=\"25\""));                                      // with rounded corners
+	}
 };
 
 QTEST_MAIN(TestRender)

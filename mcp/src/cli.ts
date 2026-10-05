@@ -56,7 +56,12 @@ export type Sketch = {
 
 export type View = 'breadboard' | 'schematic'
 
-export type RenderOptions = { ppi?: number, transparent?: boolean, view?: View }
+// "modern" restyles schematics; Fritzing's own look is the default.
+export type Theme = 'fritzing' | 'modern'
+
+export type RenderOptions = { ppi?: number, transparent?: boolean, view?: View, theme?: Theme }
+
+export const DefaultPpi = 300
 
 export type Rendered = { png: Buffer, svg: string, warnings: string[] }
 
@@ -64,9 +69,13 @@ export function binaryPath(env: Record<string, string | undefined>, repoRoot: st
   return env.FRITZING_RENDER_BIN ?? join(repoRoot, 'build', 'fritzing-render')
 }
 
-export function renderArgs(o: { sketchFile: string, svgFile: string, pngFile: string, ppi: number, transparent: boolean, view?: View }): string[] {
-  const args = ['render', o.sketchFile, '-o', o.svgFile, '--png', o.pngFile, '--ppi', String(o.ppi)]
-  return [...args, ...(o.view && o.view !== 'breadboard' ? ['--view', o.view] : []), ...(o.transparent ? ['--transparent'] : [])]
+export function renderArgs(o: { sketchFile: string, svgFile: string, pngFile: string, ppi: number, transparent: boolean, view?: View, theme?: Theme }): string[] {
+  return [
+    'render', o.sketchFile, '-o', o.svgFile, '--png', o.pngFile, '--ppi', String(o.ppi),
+    ...(o.view && o.view !== 'breadboard' ? ['--view', o.view] : []),
+    ...(o.theme && o.theme !== 'fritzing' ? ['--theme', o.theme] : []),
+    ...(o.transparent ? ['--transparent'] : []),
+  ]
 }
 
 export function formatSearch(hits: PartHit[]): string {
@@ -126,7 +135,13 @@ export async function describePart(bin: string, ref: string): Promise<PartInfo> 
 async function renderFile(bin: string, dir: string, sketchFile: string, options: RenderOptions): Promise<Rendered> {
   const svgFile = join(dir, 'out.svg')
   const pngFile = join(dir, 'out.png')
-  const { stderr } = await run(bin, renderArgs({ sketchFile, svgFile, pngFile, ppi: options.ppi ?? 150, transparent: options.transparent ?? false, view: options.view }))
+  const { stderr } = await run(bin, renderArgs({
+    sketchFile, svgFile, pngFile,
+    ppi: options.ppi ?? DefaultPpi,
+    transparent: options.transparent ?? false,
+    view: options.view,
+    theme: options.theme,
+  }))
   return { png: await readFile(pngFile), svg: await readFile(svgFile, 'utf8'), warnings: parseWarnings(stderr) }
 }
 
