@@ -5,7 +5,9 @@ using Fritzing's own SVG code and its parts libraries. Comes with a CLI and an
 MCP server, so an agent can search parts, read their pins, render a diagram
 and look at the image.
 
-![Example render](examples/smoke.png)
+![ESP32 air station](examples/esp32-air-station.png)
+
+More in [examples/](examples): an [ODROID-SHOW2 display](examples/odroid-show2.png) and a [smoke test](examples/smoke.png). Their sketches are the `.json` files beside them.
 
 ## How it works
 
@@ -30,6 +32,13 @@ those pieces are reimplemented in `src/`, following the originals:
 - `partlib.cpp`: finding parts and their SVGs in the libraries
 - `render.cpp`: the compose loop, wires (`Wire::makeWireSVG`: a 2-unit line over a 4-unit shadow, colors from Fritzing's `ratsnestcolors.xml`) and unbent legs (`ConnectorItem::makeLegSvg`)
 
+Two deliberate differences from Fritzing's export:
+
+- A part whose drawing has no element for the view's layer (common in
+  community parts) is drawn whole, as the Fritzing app shows it; Fritzing's
+  own SVG export drops such parts.
+- Unbent legs are drawn straight; there is no way to describe bent legs yet.
+
 Only the breadboard view is rendered so far.
 
 ## Build
@@ -40,7 +49,7 @@ next to this repo (or `-DFRITZING_APP=...`).
 ```sh
 brew install qt boost cmake
 git clone https://github.com/fritzing/fritzing-app ../fritzing-app
-scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, Adafruit's library (unpacked)
+scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, Adafruit's library, two community libraries
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
 cmake --build build -j
 (cd build && ctest)
@@ -64,7 +73,9 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 {
   "parts": [
     { "id": "mcu", "part": "core/Arduino Nano3(fix).fzp", "x": 0, "y": 0, "label": "Arduino Nano" },
-    { "id": "r1", "part": "core/resistor.fzp", "x": 120, "y": 40, "rotate": 90 }
+    { "id": "r1", "part": "core/resistor.fzp", "x": 120, "y": 40, "rotate": 90 },
+    { "id": "led", "part": "core/LED-generic-5mm_6852162_005.fzp", "x": 200, "y": 0, "color": "green" },
+    { "id": "relay", "generic": { "title": "BLE Nano", "pins": ["TX", "GND"] }, "x": 260, "y": 0 }
   ],
   "wires": [
     { "from": "mcu.D2", "to": "r1.connector0", "color": "green", "via": [[90, 49.5]] }
@@ -76,6 +87,9 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 - Coordinates are Fritzing scene units: 90 per inch (header pins are 9 apart), y down.
 - `x`/`y` place a part's top-left corner; `rotate` (0, 90, 180, 270, clockwise) turns it about its centre.
 - `part` is a ref from `search`, an `.fzp` path, a moduleId or an exact title.
+- `generic` instead of `part` draws a labelled block with 0.1 in header pins along its bottom, for parts no library has.
+- `label` draws text above the part (`labelBelow: true` puts it under).
+- `color` recolors a part's `color_*` elements, as Fritzing does for LEDs: a Fritzing LED color (`"Green (555nm)"`), a word (`green`: Fritzing's default shade) or `#rrggbb`.
 - Wire ends are `<part id>.<connector name or id>`; `via` adds bend points.
 - `color` is a Fritzing wire color (blue, red, black, yellow, green, grey, white, orange, ochre, cyan, brown, purple, pink) or `#rrggbb`.
 
@@ -109,5 +123,7 @@ Register it with Claude Code, e.g. in a project's `.mcp.json`:
 ## Licence
 
 GPL-3.0-or-later, as it compiles Fritzing's GPL sources. The parts libraries
-are fetched, not included: Fritzing's are CC-BY-SA 3.0, Adafruit's are under
-their own terms, and so are the part drawings in rendered images.
+are fetched, not included: Fritzing's are CC-BY-SA 3.0; Adafruit's
+Fritzing library, TD-er/fritzing-parts (MIT) and the DOIT ESP32 DevKit part
+(vanepp, Fritzing forum) are under their own terms, and so are the part
+drawings in rendered images, including the examples here.

@@ -4,7 +4,7 @@
 //
 // {
 //   "parts": [
-//     { "id": "mcu", "part": "core/Arduino Nano3(fix).fzp", "x": 0, "y": 0, "rotate": 0, "label": "SHOW2" }
+//     { "id": "mcu", "part": "core/Arduino Nano3(fix).fzp", "x": 0, "y": 0, "rotate": 0, "label": "SHOW2", "labelBelow": false }
 //   ],
 //   "wires": [
 //     { "from": "mcu.D10", "to": "lcd.CS", "color": "blue", "via": [[120, 40]] }
@@ -15,6 +15,10 @@
 // A part missing from the libraries can be drawn as a generic labelled
 // block with header pins along its bottom edge, in place of "part":
 //   { "id": "relay", "generic": { "title": "BLE Nano", "pins": ["TX", "GND"] }, "x": 0, "y": 0 }
+//
+// "color" on a part recolors its color_* elements, as Fritzing does for
+// LEDs: a Fritzing LED color ("Green (555nm)"), a word (green: Fritzing's
+// default shade) or #rrggbb.
 //
 // "part" is an .fzp path (absolute or relative to a library root), a
 // moduleId or an exact title. Connectors are "<part id>.<connector id or name>".
@@ -40,6 +44,8 @@ struct PartSpec {
 	QPointF pos;
 	int rotate = 0;  // degrees, clockwise
 	QString label;
+	bool labelBelow = false;  // "labelBelow": true puts the label under the part
+	QString color;            // recolors the part's color_* elements (Fritzing's LED colors)
 };
 
 struct WireSpec {

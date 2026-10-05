@@ -85,6 +85,8 @@ server.registerTool(
           y: z.number().default(0),
           rotate: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]).default(0),
           label: z.string().optional().describe('text drawn above the part'),
+          labelBelow: z.boolean().optional().describe('draw the label under the part instead'),
+          color: z.string().optional().describe('recolors an LED-style part: a Fritzing LED color like "Green (555nm)", a word like green, or #rrggbb'),
         }).refine(p => Boolean(p.part) !== Boolean(p.generic), { message: 'give each part either "part" or "generic"' }))
         .min(1),
       wires: z

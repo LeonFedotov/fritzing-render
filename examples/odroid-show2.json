@@ -1,0 +1,467 @@
+{
+  "parts": [
+    {
+      "id": "mcu",
+      "x": 248.24,
+      "y": 211.76,
+      "part": "core/Arduino Nano3(fix).fzp",
+      "rotate": 90
+    },
+    {
+      "id": "lcd",
+      "x": 60.0,
+      "y": -40.0,
+      "part": "contrib/adafruit_0637333f6ecab53f3a8baf35c15ba64e_1_95.fzp",
+      "label": "LCD: ILI9340, 320x240"
+    },
+    {
+      "id": "btn_left",
+      "x": 352.0,
+      "y": 112.0,
+      "part": "core/Pushbutton.fzp",
+      "label": "<"
+    },
+    {
+      "id": "led_poor",
+      "x": 440.0,
+      "y": 112.0,
+      "part": "core/LED-generic-5mm_6852162_005.fzp",
+      "label": "POOR"
+    },
+    {
+      "id": "r_poor",
+      "x": 466.0,
+      "y": 150.0,
+      "part": "core/resistor.fzp"
+    },
+    {
+      "id": "led_fair",
+      "x": 518.0,
+      "y": 112.0,
+      "part": "core/LED-generic-5mm_6852162_005.fzp",
+      "label": "FAIR"
+    },
+    {
+      "id": "r_fair",
+      "x": 544.0,
+      "y": 150.0,
+      "part": "core/resistor.fzp"
+    },
+    {
+      "id": "led_good",
+      "x": 596.0,
+      "y": 112.0,
+      "part": "core/LED-generic-5mm_6852162_005.fzp",
+      "label": "GOOD"
+    },
+    {
+      "id": "r_good",
+      "x": 622.0,
+      "y": 150.0,
+      "part": "core/resistor.fzp"
+    },
+    {
+      "id": "relay",
+      "x": 680.0,
+      "y": 128.0,
+      "generic": {
+        "title": "BLE Nano relay",
+        "pins": [
+          "TX",
+          "GND"
+        ]
+      },
+      "label": "sim: serial monitor TX"
+    },
+    {
+      "id": "btn_mid",
+      "x": 96.0,
+      "y": 410.0,
+      "part": "core/Pushbutton.fzp",
+      "rotate": 180,
+      "label": "V",
+      "labelBelow": true
+    },
+    {
+      "id": "btn_right",
+      "x": 172.0,
+      "y": 410.0,
+      "part": "core/Pushbutton.fzp",
+      "rotate": 180,
+      "label": ">",
+      "labelBelow": true
+    },
+    {
+      "id": "bat",
+      "x": 246.78,
+      "y": 410.0,
+      "part": "core/potentiometer_rotary_9mm_6.fzp",
+      "rotate": 180,
+      "label": "battery",
+      "labelBelow": true
+    },
+    {
+      "id": "chg",
+      "x": 282.78,
+      "y": 410.0,
+      "part": "core/potentiometer_rotary_9mm_6.fzp",
+      "rotate": 180,
+      "label": "charge LED",
+      "labelBelow": true
+    }
+  ],
+  "wires": [
+    {
+      "from": "lcd.MISO",
+      "to": "mcu.D12/MISO",
+      "color": "green",
+      "via": [
+        [
+          109.5,
+          252
+        ],
+        [
+          219.98,
+          252
+        ]
+      ]
+    },
+    {
+      "from": "lcd.MOSI",
+      "to": "mcu.D11/MOSI",
+      "color": "blue",
+      "via": [
+        [
+          118.5,
+          245
+        ],
+        [
+          228.98,
+          245
+        ]
+      ]
+    },
+    {
+      "from": "lcd.LCDCS",
+      "to": "mcu.D10",
+      "color": "orange",
+      "via": [
+        [
+          127.5,
+          238
+        ],
+        [
+          237.98,
+          238
+        ]
+      ]
+    },
+    {
+      "from": "lcd.RESET",
+      "to": "mcu.D8",
+      "color": "white",
+      "via": [
+        [
+          145.5,
+          231
+        ],
+        [
+          255.98,
+          231
+        ]
+      ]
+    },
+    {
+      "from": "lcd.DC",
+      "to": "mcu.D9",
+      "color": "purple",
+      "via": [
+        [
+          154.5,
+          224
+        ],
+        [
+          246.98,
+          224
+        ]
+      ]
+    },
+    {
+      "from": "lcd.BACKLIGHT",
+      "to": "mcu.D5",
+      "color": "grey",
+      "via": [
+        [
+          91.5,
+          200
+        ],
+        [
+          282.98,
+          200
+        ]
+      ]
+    },
+    {
+      "from": "lcd.SCLK",
+      "to": "mcu.D13/SCK",
+      "color": "yellow",
+      "via": [
+        [
+          100.5,
+          327
+        ],
+        [
+          219.98,
+          327
+        ]
+      ]
+    },
+    {
+      "from": "btn_left.leg0",
+      "to": "mcu.D7",
+      "color": "blue",
+      "via": [
+        [
+          378.429,
+          226
+        ],
+        [
+          264.98,
+          226
+        ]
+      ]
+    },
+    {
+      "from": "led_poor.cathode",
+      "to": "mcu.D6",
+      "color": "pink",
+      "via": [
+        [
+          445.658,
+          232
+        ],
+        [
+          273.98,
+          232
+        ]
+      ]
+    },
+    {
+      "from": "led_poor.anode",
+      "to": "r_poor.connector0",
+      "color": "red",
+      "via": [
+        [
+          467.31,
+          179.279
+        ]
+      ]
+    },
+    {
+      "from": "led_fair.cathode",
+      "to": "mcu.D4",
+      "color": "ochre",
+      "via": [
+        [
+          523.658,
+          238
+        ],
+        [
+          291.98,
+          238
+        ]
+      ]
+    },
+    {
+      "from": "led_fair.anode",
+      "to": "r_fair.connector0",
+      "color": "red",
+      "via": [
+        [
+          545.309,
+          179.279
+        ]
+      ]
+    },
+    {
+      "from": "led_good.cathode",
+      "to": "mcu.D3",
+      "color": "green",
+      "via": [
+        [
+          601.658,
+          244
+        ],
+        [
+          300.98,
+          244
+        ]
+      ]
+    },
+    {
+      "from": "led_good.anode",
+      "to": "r_good.connector0",
+      "color": "red",
+      "via": [
+        [
+          623.309,
+          179.279
+        ]
+      ]
+    },
+    {
+      "from": "relay.TX",
+      "to": "mcu.D2",
+      "color": "cyan",
+      "via": [
+        [
+          709.94,
+          250
+        ],
+        [
+          309.98,
+          250
+        ]
+      ]
+    },
+    {
+      "from": "relay.GND",
+      "to": "mcu.GND",
+      "color": "black",
+      "via": [
+        [
+          718.94,
+          256
+        ],
+        [
+          318.98,
+          256
+        ]
+      ]
+    },
+    {
+      "from": "r_poor.connector1",
+      "to": "r_fair.connector1",
+      "color": "red",
+      "via": [
+        [
+          503.316,
+          86
+        ],
+        [
+          581.316,
+          86
+        ]
+      ]
+    },
+    {
+      "from": "r_fair.connector1",
+      "to": "r_good.connector1",
+      "color": "red",
+      "via": [
+        [
+          581.316,
+          86
+        ],
+        [
+          659.316,
+          86
+        ]
+      ]
+    },
+    {
+      "from": "r_good.connector1",
+      "to": "mcu.5V",
+      "color": "red",
+      "via": [
+        [
+          659.316,
+          86
+        ],
+        [
+          790,
+          86
+        ],
+        [
+          790,
+          372
+        ],
+        [
+          318.98,
+          372
+        ]
+      ]
+    },
+    {
+      "from": "btn_mid.leg1",
+      "to": "mcu.A0",
+      "color": "blue",
+      "via": [
+        [
+          123.738,
+          333
+        ],
+        [
+          246.98,
+          333
+        ]
+      ]
+    },
+    {
+      "from": "btn_right.leg1",
+      "to": "mcu.A1",
+      "color": "blue",
+      "via": [
+        [
+          199.738,
+          340
+        ],
+        [
+          255.98,
+          340
+        ]
+      ]
+    },
+    {
+      "from": "btn_mid.leg0",
+      "to": "btn_right.leg0",
+      "color": "black",
+      "via": [
+        [
+          132.774,
+          352
+        ],
+        [
+          208.774,
+          352
+        ]
+      ]
+    },
+    {
+      "from": "btn_right.leg0",
+      "to": "mcu.connector32",
+      "color": "black",
+      "via": [
+        [
+          208.774,
+          358
+        ],
+        [
+          336.98,
+          358
+        ]
+      ]
+    },
+    {
+      "from": "bat.wiper",
+      "to": "mcu.A2",
+      "color": "purple"
+    },
+    {
+      "from": "chg.wiper",
+      "to": "mcu.A6",
+      "color": "purple"
+    }
+  ],
+  "margin": 24
+}

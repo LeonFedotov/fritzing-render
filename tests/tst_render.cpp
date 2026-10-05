@@ -74,7 +74,7 @@ private Q_SLOTS:
 
 	void resolveByPathModuleIdAndTitle() {
 		const auto entries = partlib::index(FixtureRoots);
-		QCOMPARE(entries.size(), 2);
+		QCOMPARE(entries.size(), 4);
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "core/testpart.fzp").endsWith("testpart.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "FlatModuleID").endsWith("part.flat.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "test part").endsWith("testpart.fzp"));
@@ -93,7 +93,7 @@ private Q_SLOTS:
 	void searchNeedsEveryWord() {
 		const auto entries = partlib::index(FixtureRoots);
 		QCOMPARE(partlib::search(entries, "flat part", 10).size(), 1);
-		QCOMPARE(partlib::search(entries, "part", 10).size(), 2);
+		QCOMPARE(partlib::search(entries, "part", 10).size(), 3);
 		QCOMPARE(partlib::search(entries, "part zebra", 10).size(), 0);
 	}
 
@@ -178,6 +178,18 @@ private Q_SLOTS:
 		QVERIFY(qAbs(l[1] - (-4.5 + 9) * 1000 / 90) < 0.01);
 	}
 
+	void labelsSitAboveOrBelow() {
+		auto labelY = [](const char * json) {
+			const auto parsed = sketch::parse(QByteArray(json).replace('\'', '"'));
+			const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
+			const auto m = QRegularExpression("<text x='[-\\d.e]+' y='([-\\d.e]+)'").match(r.svg);
+			return m.captured(1).toDouble() * 90 / 1000;  // scene units from the bounds' top
+		};
+		// margin 0: above, the label's top sets the bounds; below, the part's top does.
+		QVERIFY(qAbs(labelY("{'margin':0,'parts':[{'id':'a','part':'core/testpart.fzp','label':'A'}]}") - 10) < 0.01);
+		QVERIFY(qAbs(labelY("{'margin':0,'parts':[{'id':'a','part':'core/testpart.fzp','label':'A','labelBelow':true}]}") - (18 + 11)) < 0.01);
+	}
+
 	void namedColorsUseFritzingsPalette() {
 		const auto parsed = sketch::parse(J("{'parts':[{'id':'a','part':'core/testpart.fzp'}], 'wires':[{'from':'a.IN','to':'a.OUT','color':'red'}]}"));
 		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
@@ -190,6 +202,31 @@ private Q_SLOTS:
 		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
 		QVERIFY(r.error.contains("no connector \"VCC\""));
 		QVERIFY(r.error.contains("IN, OUT"));
+	}
+
+	void drawingWithoutALayerGroupIsDrawnWhole() {
+		// Fritzing's own export drops such parts (the layer split fails); the
+		// app shows them, so render the whole drawing as the layer.
+		const auto parsed = sketch::parse(J("{'margin':0,'parts':[{'id':'a','part':'core/nolayer.fzp'}]}"));
+		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QVERIFY(r.svg.contains("#abcdef"));
+		QCOMPARE(QColor(render::rasterize(r.svg, r.size, 180, false).pixel(36, 5)), QColor("#abcdef"));
+	}
+
+	void partColorRecolorsColorElementsLikeFritzingsLed() {
+		auto render = [](const char * color) {
+			const auto parsed = sketch::parse(J(QString("{'margin':0,'parts':[{'id':'a','part':'core/led.fzp','color':'%1'}]}").arg(color).toUtf8().constData()));
+			return render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
+		};
+		const auto byWord = render("green");  // Fritzing's own green: Green (555nm)
+		QVERIFY2(byWord.error.isEmpty(), qPrintable(byWord.error));
+		QCOMPARE(QColor(render::rasterize(byWord.svg, byWord.size, 180, false).pixel(36, 5)), QColor("#00b33b"));
+		QCOMPARE(QColor(render::rasterize(render("Yellow (595nm)").svg, byWord.size, 180, false).pixel(36, 5)), QColor("#fadf47"));
+		QCOMPARE(QColor(render::rasterize(render("#123abc").svg, byWord.size, 180, false).pixel(36, 5)), QColor("#123abc"));
+		QVERIFY(render("plaid").error.contains("plaid"));
+		// elements without a color_ id keep theirs
+		QCOMPARE(QColor(render::rasterize(byWord.svg, byWord.size, 180, false).pixel(36, 30)), QColor("#cccccc"));
 	}
 
 	void unknownPartIsAnError() {

@@ -1,0 +1,311 @@
+{
+  "parts": [
+    {
+      "id": "esp",
+      "x": 300.0,
+      "y": 120.0,
+      "part": "DOIT Esp32 DevKit v1 improved/part.esp32_p30_w11_9de09df6ee672a047957b8e804927eb5_1.fzp",
+      "label": "ESP32 DevKit (WROOM-32)"
+    },
+    {
+      "id": "co2",
+      "x": 96.0,
+      "y": 140.0,
+      "part": "MH-Z19 CO2 sensor/part.MH-Z19_CO2_a37d490e3f753503f96aa4adfb4707cc_13.fzp",
+      "label": "MH-Z19B"
+    },
+    {
+      "id": "dht",
+      "x": 170.0,
+      "y": 262.0,
+      "part": "contrib/DHT22_Humidity_and_Temperature_Sensor__5a66c01a9adead9b6c488a2653070fb3_C9.fzp",
+      "rotate": 180,
+      "label": "AM2302 (onboard)",
+      "labelBelow": true
+    },
+    {
+      "id": "pms",
+      "x": 440.0,
+      "y": -70.0,
+      "part": "Adafruit PMSA003I Air Quality Breakout/part.adafruit_5c0a4ef5ca250ddc0066c028af7d4113_1.fzp",
+      "label": "PMSA003I"
+    },
+    {
+      "id": "sd",
+      "x": 670.0,
+      "y": 186.0,
+      "part": "Adafruit MicroSD card breakout board/part.adafruit_20ad62e9d9b9d8b4db0569d4b092e586_1.fzp",
+      "rotate": 180,
+      "label": "microSD (VSPI)"
+    },
+    {
+      "id": "led_red",
+      "x": 430.0,
+      "y": 300.0,
+      "part": "core/LED-generic-5mm_6852162_005.fzp",
+      "label": "GPIO16"
+    },
+    {
+      "id": "r_led_red",
+      "x": 456.0,
+      "y": 338.0,
+      "part": "core/resistor.fzp"
+    },
+    {
+      "id": "led_green",
+      "x": 500.0,
+      "y": 300.0,
+      "part": "core/LED-generic-5mm_6852162_005.fzp",
+      "label": "GPIO17",
+      "color": "green"
+    },
+    {
+      "id": "r_led_green",
+      "x": 526.0,
+      "y": 338.0,
+      "part": "core/resistor.fzp"
+    }
+  ],
+  "wires": [
+    {
+      "from": "co2.TX",
+      "to": "esp.D35",
+      "color": "green",
+      "via": [
+        [
+          258,
+          174.767
+        ],
+        [
+          258,
+          177.368
+        ]
+      ]
+    },
+    {
+      "from": "co2.RX",
+      "to": "esp.D33",
+      "color": "yellow",
+      "via": [
+        [
+          268,
+          183.744
+        ],
+        [
+          268,
+          195.368
+        ]
+      ]
+    },
+    {
+      "from": "co2.PWM",
+      "to": "esp.D34",
+      "color": "purple",
+      "via": [
+        [
+          84,
+          165.793
+        ],
+        [
+          84,
+          126
+        ],
+        [
+          282,
+          126
+        ],
+        [
+          282,
+          168.368
+        ]
+      ]
+    },
+    {
+      "from": "dht.DATA",
+      "to": "esp.D14",
+      "color": "blue",
+      "via": [
+        [
+          198.061,
+          231.368
+        ]
+      ]
+    },
+    {
+      "from": "esp.D22",
+      "to": "pms.connector56",
+      "color": "yellow",
+      "via": [
+        [
+          506.922,
+          150.336
+        ]
+      ]
+    },
+    {
+      "from": "esp.D21",
+      "to": "pms.connector57",
+      "color": "blue",
+      "via": [
+        [
+          515.922,
+          177.368
+        ]
+      ]
+    },
+    {
+      "from": "esp.D23",
+      "to": "sd.DI",
+      "color": "cyan",
+      "via": [
+        [
+          642,
+          141.345
+        ],
+        [
+          642,
+          244.05
+        ]
+      ]
+    },
+    {
+      "from": "esp.D19",
+      "to": "sd.DO",
+      "color": "white",
+      "via": [
+        [
+          632,
+          186.368
+        ],
+        [
+          632,
+          235.05
+        ]
+      ]
+    },
+    {
+      "from": "esp.D18",
+      "to": "sd.CLK",
+      "color": "ochre",
+      "via": [
+        [
+          622,
+          195.368
+        ],
+        [
+          622,
+          226.05
+        ]
+      ]
+    },
+    {
+      "from": "esp.D5",
+      "to": "sd.CS",
+      "color": "orange",
+      "via": [
+        [
+          612,
+          204.368
+        ],
+        [
+          612,
+          253.05
+        ]
+      ]
+    },
+    {
+      "from": "esp.D4",
+      "to": "sd.CD",
+      "color": "grey",
+      "via": [
+        [
+          602,
+          231.368
+        ],
+        [
+          602,
+          262.05
+        ]
+      ]
+    },
+    {
+      "from": "led_red.anode",
+      "to": "r_led_red.connector0",
+      "color": "red",
+      "via": [
+        [
+          457.31,
+          367.279
+        ]
+      ]
+    },
+    {
+      "from": "r_led_red.connector1",
+      "to": "esp.RX2",
+      "color": "red",
+      "via": [
+        [
+          493.316,
+          222.368
+        ]
+      ]
+    },
+    {
+      "from": "led_green.anode",
+      "to": "r_led_green.connector0",
+      "color": "green",
+      "via": [
+        [
+          527.309,
+          367.279
+        ]
+      ]
+    },
+    {
+      "from": "r_led_green.connector1",
+      "to": "esp.TX2",
+      "color": "green",
+      "via": [
+        [
+          563.316,
+          213.368
+        ]
+      ]
+    },
+    {
+      "from": "led_green.cathode",
+      "to": "led_red.cathode",
+      "color": "black",
+      "via": [
+        [
+          505.658,
+          385
+        ],
+        [
+          435.658,
+          385
+        ]
+      ]
+    },
+    {
+      "from": "led_red.cathode",
+      "to": "esp.connector28",
+      "color": "black",
+      "via": [
+        [
+          435.658,
+          395
+        ],
+        [
+          290,
+          395
+        ],
+        [
+          290,
+          258.368
+        ]
+      ]
+    }
+  ],
+  "margin": 24
+}

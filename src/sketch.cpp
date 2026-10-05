@@ -32,6 +32,8 @@ ParseResult parse(const QByteArray & json) {
 		p.pos = QPointF(o.value("x").toDouble(), o.value("y").toDouble());
 		p.rotate = o.value("rotate").toInt();
 		p.label = o.value("label").toString();
+		p.labelBelow = o.value("labelBelow").toBool();
+		p.color = o.value("color").toString();
 		const QJsonObject generic = o.value("generic").toObject();
 		p.generic.title = generic.value("title").toString();
 		for (const QJsonValue & pin : generic.value("pins").toArray()) p.generic.pins << pin.toString();

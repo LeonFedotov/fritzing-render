@@ -60,6 +60,11 @@ struct Placed {
 	QRectF sceneRect;
 };
 
+// Baseline of a part's label: just above its top-left corner, or under it.
+QPointF labelAnchor(const Placed & p) {
+	return p.spec.labelBelow ? p.sceneRect.bottomLeft() + QPointF(0, 11) : p.sceneRect.topLeft() + QPointF(0, -4);
+}
+
 QTransform placement(const sketch::PartSpec & spec, QSizeF size) {
 	QTransform t;
 	t.translate(spec.pos.x(), spec.pos.y());
@@ -69,12 +74,91 @@ QTransform placement(const sketch::PartSpec & spec, QSizeF size) {
 	return t;
 }
 
-QString partSvg(const LoadedPart & lp, QString & error) {
+// Fritzing's LED colors (resources/properties.xml): name -> fill, and for
+// each word ("green") the entry marked as the original color.
+struct LedColors {
+	QHash<QString, QString> byName;
+	QHash<QString, QString> byWord;
+};
+
+LedColors loadLedColors() {
+	LedColors colors;
+	QFile file(QStringLiteral(FR_FRITZING_APP) + "/resources/properties.xml");
+	QDomDocument doc;
+	if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file)) return colors;
+	const QDomNodeList props = doc.elementsByTagName("property");
+	for (int i = 0; i < props.count(); i++) {
+		const QDomElement prop = props.at(i).toElement();
+		// the LED list; another "color" property (plain names) serves other parts
+		if (prop.attribute("name") != "color" || !prop.attribute("defaultValue").contains("nm)")) continue;
+		QString last;
+		for (QDomNode n = prop.firstChild(); !n.isNull(); n = n.nextSibling()) {
+			if (n.isElement() && n.toElement().tagName() == "menuItem") {
+				last = n.toElement().attribute("value");
+				const QString fill = n.toElement().attribute("adjunct");
+				colors.byName.insert(last.toLower(), fill);
+				const QString word = last.section(' ', 0, 0).toLower();
+				if (!colors.byWord.contains(word)) colors.byWord.insert(word, fill);
+			} else if (n.isComment() && n.nodeValue().contains("original color") && !last.isEmpty()) {
+				colors.byWord.insert(last.section(' ', 0, 0).toLower(), colors.byName.value(last.toLower()));
+			}
+		}
+	}
+	return colors;
+}
+
+// A part color to a fill, or empty if it isn't one.
+QString resolveColor(const QString & spec) {
+	static const LedColors colors = loadLedColors();
+	if (spec.startsWith('#') && QColor(spec).isValid()) return QColor(spec).name();
+	const QString key = spec.trimmed().toLower();
+	if (colors.byName.contains(key)) return colors.byName.value(key);
+	return colors.byWord.value(key);
+}
+
+// LED::slamColor: every element whose id starts with color_ gets the fill.
+void slamColor(QDomElement element, const QString & fill) {
+	if (element.attribute("id").startsWith("color_")) element.setAttribute("fill", fill);
+	for (QDomElement child = element.firstChildElement(); !child.isNull(); child = child.nextSiblingElement()) slamColor(child, fill);
+}
+
+// The part's SVG with every child of the root moved into <g id=layerId>,
+// for drawings that have no element for the view's layer.
+QString wrapInLayer(const QString & path, const QString & layerId) {
+	QFile file(path);
+	QDomDocument doc;
+	if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file)) return {};
+	QDomElement root = doc.documentElement();
+	QDomElement layer = doc.createElement("g");
+	layer.setAttribute("id", layerId);
+	while (root.hasChildNodes()) layer.appendChild(root.removeChild(root.firstChild()));
+	root.appendChild(layer);
+	return doc.toString();
+}
+
+QString partSvg(const LoadedPart & lp, const QString & fill, QString & error) {
 	if (!lp.generatedSvg.isEmpty()) return lp.generatedSvg;
 	SvgFileSplitter splitter;
-	if (!splitter.split(lp.svgPath, lp.layerId)) {
-		error = QString("cannot split layer %1 out of %2").arg(lp.layerId, lp.svgPath);
-		return {};
+	bool split = false;
+	if (fill.isEmpty()) {
+		split = splitter.split(lp.svgPath, lp.layerId);
+	} else {
+		// LED::getColorSVG: recolor the whole document, then split it.
+		QFile file(lp.svgPath);
+		QDomDocument doc;
+		if (file.open(QIODevice::ReadOnly) && doc.setContent(&file)) {
+			slamColor(doc.documentElement(), fill);
+			QString recolored = doc.toString();
+			split = splitter.splitString(recolored, lp.layerId);
+		}
+	}
+	if (!split) {
+		// Fritzing's export drops such a part, though the app draws it whole.
+		QString wrapped = wrapInLayer(lp.svgPath, lp.layerId);
+		if (wrapped.isEmpty() || !splitter.splitString(wrapped, lp.layerId)) {
+			error = QString("cannot split layer %1 out of %2").arg(lp.layerId, lp.svgPath);
+			return {};
+		}
 	}
 	for (const ConnectorPoint & c : lp.connectors) {
 		if (!c.legId.isEmpty() && !c.leg.isNull()) splitter.gReplace(c.legId);
@@ -231,6 +315,10 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 			result.error = QString("part %1: %2").arg(spec.id, p.loaded.error);
 			return result;
 		}
+		if (!spec.color.isEmpty() && resolveColor(spec.color).isEmpty()) {
+			result.error = QString("part %1: unknown color \"%2\" (use a Fritzing LED color like \"Green (555nm)\", a word like green, or #rrggbb)").arg(spec.id, spec.color);
+			return result;
+		}
 		p.toScene = placement(spec, p.loaded.size);
 		p.sceneRect = p.toScene.mapRect(QRectF(QPointF(0, 0), p.loaded.size));
 		for (const ConnectorPoint & cp : p.loaded.connectors) {
@@ -282,7 +370,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 	for (const QString & id : order) {
 		const Placed & p = placed[id];
 		bounds |= p.sceneRect;
-		if (!p.spec.label.isEmpty()) bounds |= QRectF(p.sceneRect.left(), p.sceneRect.top() - 14, p.spec.label.size() * 6, 14);
+		if (!p.spec.label.isEmpty()) bounds |= QRectF(labelAnchor(p).x(), labelAnchor(p).y() - 10, p.spec.label.size() * 6, 14);
 	}
 	for (const Line & l : lines) {
 		for (const QPointF & pt : l.points) bounds |= QRectF(pt - QPointF(3, 3), QSizeF(6, 6));
@@ -294,7 +382,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 	for (const QString & id : order) {
 		const Placed & p = placed[id];
 		QString err;
-		const QString svg = partSvg(p.loaded, err);
+		const QString svg = partSvg(p.loaded, resolveColor(p.spec.color), err);
 		if (!err.isEmpty()) {
 			result.error = QString("part %1: %2").arg(id, err);
 			return result;
@@ -308,7 +396,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		           .arg(toExport(p.loaded.size.width() / 2))
 		           .arg(toExport(p.loaded.size.height() / 2))
 		           .arg(svg + legsSvg(p.loaded));
-		if (!p.spec.label.isEmpty()) out += labelSvg(p.spec.label, p.sceneRect.topLeft() - offset + QPointF(0, -4)) + "\n";
+		if (!p.spec.label.isEmpty()) out += labelSvg(p.spec.label, labelAnchor(p) - offset) + "\n";
 	}
 
 	// Wire::makeWireSVG: a 4-unit shadow under a 2-unit line (the default

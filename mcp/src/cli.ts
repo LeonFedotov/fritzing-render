@@ -44,6 +44,8 @@ export type Sketch = {
     y?: number
     rotate?: number
     label?: string
+    labelBelow?: boolean
+    color?: string
   }[]
   wires?: { from: string, to: string, color?: string, via?: [number, number][] }[]
   margin?: number
