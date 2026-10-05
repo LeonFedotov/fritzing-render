@@ -25,8 +25,7 @@ COPY libraries/mgesteiro libraries/mgesteiro
 COPY libraries/dip-ics libraries/dip-ics
 COPY libraries/elegoo/bin libraries/elegoo/bin
 COPY libraries/mkjanke libraries/mkjanke
-# libraries/seeed and libraries/wemos-d1-mini-shields are left out: their
-# repositories state no licence to redistribute them.
+# libraries/seeed is left out: its repository states no licence to redistribute it.
 RUN scripts/fetch-vendor.sh && scripts/prune-vendor.sh
 
 FROM --platform=$BUILDPLATFORM debian:trixie-slim AS fritzing-app
