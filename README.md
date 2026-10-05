@@ -17,7 +17,8 @@ docker pull ghcr.io/leonfedotov/fritzing-render
 ```
 
 For linux/amd64 and linux/arm64, with Fritzing's core parts (obsolete ones
-too, for old sketches), Adafruit's library and the community parts below.
+too, for old sketches), Adafruit's and SparkFun's libraries and the
+community parts listed under [Licence](#licence).
 With no arguments it runs the MCP server on stdio; `render`, `search` and
 `part` run the CLI, in `/work`:
 
@@ -149,23 +150,27 @@ stripboards), are left out with a warning.
 
 Two deliberate differences from Fritzing's export:
 
-- A part whose drawing has no element for the view's layer (common in
-  community parts) is drawn whole, as the Fritzing app shows it; Fritzing's
-  own SVG export drops such parts.
+- A part whose breadboard view has a single layer is drawn whole, as the
+  Fritzing app loads it (`ItemBase::setUpImage`), and so is one whose drawing
+  has no element for its layer; Fritzing's own SVG export splits the layer
+  out regardless, dropping whatever lies outside it (common in community
+  parts) or the whole part.
 - Unbent legs are drawn straight; there is no way to describe bent legs yet.
 
 Only the breadboard view is rendered so far.
 
 ## Build
 
-Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
+Clone with `--recurse-submodules`: Adafruit's and SparkFun's Fritzing
+libraries are submodules under `libraries/` (`fetch-vendor.sh` initializes
+them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
 reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 (or `-DFRITZING_APP=...`). Or build the image: `docker build -t fritzing-render .`
 
 ```sh
 brew install qt boost cmake
 git clone https://github.com/fritzing/fritzing-app ../fritzing-app
-scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, Adafruit's library, two community libraries
+scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, unpacked Adafruit and SparkFun parts, community parts
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
 cmake --build build -j
 (cd build && ctest)
@@ -245,8 +250,13 @@ Register it with Claude Code (or use the [Docker image](#docker)), e.g. in a pro
 ## Licence
 
 GPL-3.0-or-later, as it compiles Fritzing's GPL sources. The parts libraries
-are fetched, not included in this repository (the Docker image does include
-them, with Fritzing's fonts): Fritzing's are CC-BY-SA 3.0; Adafruit's
-Fritzing library, TD-er/fritzing-parts (MIT) and the DOIT ESP32 DevKit part
-(vanepp, Fritzing forum) are under their own terms, and so are the part
-drawings in rendered images, including the examples here.
+are not part of this code (the Docker image does include them, with
+Fritzing's fonts), and they and the part drawings in rendered images,
+including the examples here, are under their own terms:
+
+- [fritzing-parts](https://github.com/fritzing/fritzing-parts): CC BY-SA 3.0, fetched
+- [adafruit/Fritzing-Library](https://github.com/adafruit/Fritzing-Library): CC BY-SA 3.0, submodule
+- [sparkfun/Fritzing_Parts](https://github.com/sparkfun/Fritzing_Parts): CC BY-SA 4.0, submodule
+- [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
+- [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
+- DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched

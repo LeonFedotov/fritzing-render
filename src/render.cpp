@@ -129,12 +129,9 @@ void slamColor(QDomElement element, const QString & fill) {
 	for (QDomElement child = element.firstChildElement(); !child.isNull(); child = child.nextSiblingElement()) slamColor(child, fill);
 }
 
-// The part's SVG with every child of the root moved into <g id=layerId>,
-// for drawings that have no element for the view's layer.
-QString wrapInLayer(const QString & path, const QString & layerId) {
-	QFile file(path);
-	QDomDocument doc;
-	if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file)) return {};
+// The drawing with every child of the root moved into <g id=layerId>, so
+// splitting out that layer keeps the whole drawing.
+QString wrapInLayer(QDomDocument doc, const QString & layerId) {
 	QDomElement root = doc.documentElement();
 	QDomElement layer = doc.createElement("g");
 	layer.setAttribute("id", layerId);
@@ -145,24 +142,24 @@ QString wrapInLayer(const QString & path, const QString & layerId) {
 
 QString partSvg(const LoadedPart & lp, const QString & fill, QString & error) {
 	if (!lp.generatedSvg.isEmpty()) return lp.generatedSvg;
-	SvgFileSplitter splitter;
-	bool split = false;
-	if (fill.isEmpty()) {
-		split = splitter.split(lp.svgPath, lp.layerId);
-	} else {
-		// LED::getColorSVG: recolor the whole document, then split it.
-		QFile file(lp.svgPath);
-		QDomDocument doc;
-		if (file.open(QIODevice::ReadOnly) && doc.setContent(&file)) {
-			slamColor(doc.documentElement(), fill);
-			QString recolored = doc.toString();
-			split = splitter.splitString(recolored, lp.layerId);
-		}
+	QFile file(lp.svgPath);
+	QDomDocument doc;
+	if (!file.open(QIODevice::ReadOnly) || !doc.setContent(&file)) {
+		error = "cannot read " + lp.svgPath;
+		return {};
 	}
+	// LED::getColorSVG: recolor the whole document, then split it.
+	if (!fill.isEmpty()) slamColor(doc.documentElement(), fill);
+	// ItemBase::setUpImage: a view with one layer is the whole drawing (as the
+	// app shows it; its SVG export splits even those); with several, each
+	// layer is split out. A drawing without the layer's group is drawn whole too.
+	SvgFileSplitter splitter;
+	QString whole = doc.toString();
+	const bool singleLayer = lp.part.views.value(BreadboardView).layers.size() <= 1;
+	const bool split = !singleLayer && splitter.splitString(whole, lp.layerId);
 	if (!split) {
-		// Fritzing's export drops such a part, though the app draws it whole.
-		QString wrapped = wrapInLayer(lp.svgPath, lp.layerId);
-		if (wrapped.isEmpty() || !splitter.splitString(wrapped, lp.layerId)) {
+		QString wrapped = wrapInLayer(doc, lp.layerId);
+		if (!splitter.splitString(wrapped, lp.layerId)) {
 			error = QString("cannot split layer %1 out of %2").arg(lp.layerId, lp.svgPath);
 			return {};
 		}

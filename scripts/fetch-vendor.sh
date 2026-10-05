@@ -2,24 +2,31 @@
 # Fetches what the renderer builds against and renders from, into vendor/:
 # svgpp (header-only, used by Fritzing's TextUtils) and the parts libraries.
 # Fritzing's own sources are compiled in place from FRITZING_APP (default ../fritzing-app).
+# Adafruit's and SparkFun's libraries are submodules under libraries/.
 set -e
 cd "$(dirname "$0")/.."
+if [ -e .git ]; then git submodule update --init --depth 1 libraries; fi
 mkdir -p vendor && cd vendor
 [ -d svgpp-1.3.1 ] || git clone --depth 1 --branch v1.3.1 https://github.com/svgpp/svgpp.git svgpp-1.3.1
 [ -d fritzing-parts ] || git clone --depth 1 --branch develop https://github.com/fritzing/fritzing-parts.git
-[ -d adafruit-fritzing ] || git clone --depth 1 https://github.com/adafruit/Fritzing-Library.git adafruit-fritzing
-# Adafruit ships .fzpz archives (fzp + svg.<view>.<name>.svg); unpack each
-# into its own folder so the part library can read them like loose parts.
-if [ ! -d adafruit-parts ]; then
-  mkdir adafruit-parts
-  for z in adafruit-fritzing/parts/*.fzpz; do
-    d="adafruit-parts/$(basename "$z" .fzpz)"
+
+# Adafruit and SparkFun ship .fzpz archives (fzp + svg.<view>.<name>.svg);
+# unpack each into its own folder so the part library reads them like loose parts.
+unpack() {  # <folder of .fzpz files> <destination>
+  [ -d "$2" ] && return
+  mkdir "$2"
+  for z in "$1"/*.fzpz; do
+    d="$2/$(basename "$z" .fzpz)"
     mkdir -p "$d" && unzip -q -o "$z" -d "$d"
   done
-fi
-# Community parts the main libraries lack, unpacked like Adafruit's:
+}
+unpack ../libraries/adafruit/parts adafruit-parts
+unpack ../libraries/sparkfun/products sparkfun-parts
+
+# Community parts the main libraries lack, unpacked the same way:
 # TD-er/fritzing-parts (MIT): MH-Z19 CO2 sensor, NodeMCU, OLEDs, LuaNode32.
 # DOIT ESP32 DevKit v1 "improved" (vanepp, Fritzing forum), via a GitHub mirror.
+# Unexpected Maker FeatherS2 (otherguy/FeatherS2-Fritzing, MIT).
 if [ ! -d community-parts ]; then
   mkdir community-parts
   git clone -q --depth 1 https://github.com/TD-er/fritzing-parts.git community-src-tder
@@ -31,4 +38,8 @@ if [ ! -d community-parts ]; then
     "https://raw.githubusercontent.com/jorgechacblogspot/librerias_fritzing/main/DOIT%20Esp32%20DevKit%20v1%20improved.fzpz"
   mkdir -p "community-parts/DOIT Esp32 DevKit v1 improved"
   unzip -q -o community-doit-esp32.fzpz -d "community-parts/DOIT Esp32 DevKit v1 improved"
+  curl -fsSL -o "community-feathers2.fzpz" \
+    "https://raw.githubusercontent.com/otherguy/FeatherS2-Fritzing/ee018098aca0ec3f912d9cd7218658e1ac8909fc/Feather%20S2.fzpz"
+  mkdir -p "community-parts/Feather S2"
+  unzip -q -o community-feathers2.fzpz -d "community-parts/Feather S2"
 fi

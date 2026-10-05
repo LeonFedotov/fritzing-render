@@ -94,11 +94,18 @@ private Q_SLOTS:
 
 	void resolveByPathModuleIdAndTitle() {
 		const auto entries = partlib::index(FixtureRoots);
-		QCOMPARE(entries.size(), 5);
+		QCOMPARE(entries.size(), 6);
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "core/testpart.fzp").endsWith("testpart.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "FlatModuleID").endsWith("part.flat.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "test part").endsWith("testpart.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "nothing like it").isEmpty());
+	}
+
+	void defaultRootsAreTheVendorLibraries() {
+		qunsetenv("FRITZING_PARTS");
+		QStringList names;
+		for (const QString & root : partlib::defaultRoots()) names << QFileInfo(root).fileName();
+		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "community-parts"}));
 	}
 
 	void refIsRelativeToItsRoot() {
@@ -232,6 +239,15 @@ private Q_SLOTS:
 		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
 		QVERIFY(r.svg.contains("#abcdef"));
 		QCOMPARE(QColor(render::rasterize(r.svg, r.size, 180, false).pixel(36, 5)), QColor("#abcdef"));
+	}
+
+	void singleLayerViewIsDrawnWhole() {
+		// The app loads a one-layer view's whole drawing (ItemBase::setUpImage),
+		// so elements outside the layer's group show too.
+		const auto parsed = sketch::parse(J("{'margin':0,'parts':[{'id':'a','part':'core/outside.fzp'}]}"));
+		const render::Result r = render::renderSketch(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots));
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QCOMPARE(QColor(render::rasterize(r.svg, r.size, 180, false).pixel(36, 5)), QColor("#123456"));
 	}
 
 	void partColorRecolorsColorElementsLikeFritzingsLed() {

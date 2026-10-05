@@ -1,0 +1,8 @@
+[submodule "libraries/adafruit"]
+	path = libraries/adafruit
+	url = https://github.com/adafruit/Fritzing-Library.git
+	shallow = true
+[submodule "libraries/sparkfun"]
+	path = libraries/sparkfun
+	url = https://github.com/sparkfun/Fritzing_Parts.git
+	shallow = true

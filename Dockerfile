@@ -17,6 +17,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /opt/fritzing-render
 COPY scripts/fetch-vendor.sh scripts/prune-vendor.sh scripts/
+# The submodules' part archives (check out with --recurse-submodules)
+COPY libraries/adafruit/parts libraries/adafruit/parts
+COPY libraries/sparkfun/products libraries/sparkfun/products
 RUN scripts/fetch-vendor.sh && scripts/prune-vendor.sh
 
 FROM --platform=$BUILDPLATFORM debian:trixie-slim AS fritzing-app
