@@ -2,8 +2,8 @@
 # Fetches what the renderer builds against and renders from, into vendor/:
 # svgpp (header-only, used by Fritzing's TextUtils) and the parts libraries.
 # Fritzing's own sources are compiled in place from FRITZING_APP (default ../fritzing-app).
-# Adafruit's and SparkFun's libraries are submodules under libraries/, and
-# fritzing-parts-extra (parts drawn for boards no library has) is parts/.
+# Adafruit's and SparkFun's libraries, and fritzing-parts-extra (parts drawn
+# for boards no library has), are submodules under libraries/.
 set -e
 cd "$(dirname "$0")/.."
 if [ -e .git ]; then git submodule update --init --depth 1; fi

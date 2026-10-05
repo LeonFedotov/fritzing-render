@@ -69,7 +69,7 @@ target_link_libraries(frcore PUBLIC
 
 target_compile_definitions(frcore PUBLIC
   FR_VENDOR_DIR="${CMAKE_SOURCE_DIR}/vendor"
-  FR_PARTS_DIR="${CMAKE_SOURCE_DIR}/parts"
+  FR_PARTS_DIR="${CMAKE_SOURCE_DIR}/libraries/fritzing-parts-extra"
   FR_FRITZING_APP="${FRITZING_APP}"
 )
 

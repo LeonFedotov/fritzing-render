@@ -106,11 +106,12 @@ private Q_SLOTS:
 		qunsetenv("FRITZING_PARTS");
 		QStringList names;
 		for (const QString & root : partlib::defaultRoots()) names << QFileInfo(root).fileName();
-		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "community-parts", "parts"}));
+		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "community-parts", "fritzing-parts-extra"}));
 	}
 
 	void ownPartsAreInTheLibrary() {
-		// parts/ holds parts made here, e.g. the RedBear BLE Nano v1.5 from RedBear's gerbers.
+		// libraries/fritzing-parts-extra holds parts made for boards no library has,
+		// e.g. the RedBear BLE Nano v1.5 from RedBear's gerbers.
 		qunsetenv("FRITZING_PARTS");
 		const QStringList roots = partlib::defaultRoots();
 		const QString path = partlib::resolve(roots, partlib::index(roots), "RedBearBLENanoV1_5ModuleID");

@@ -21,7 +21,7 @@ struct Entry {
 };
 
 // The library roots: FRITZING_PARTS (colon-separated) if set, else the
-// vendor folders this build was configured with and this repository's parts/.
+// vendor folders this build was configured with and libraries/fritzing-parts-extra.
 QStringList defaultRoots();
 
 // Every .fzp under the roots, with its header fields. obsolete/ folders are

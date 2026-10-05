@@ -6,7 +6,7 @@
 	path = libraries/sparkfun
 	url = https://github.com/sparkfun/Fritzing_Parts.git
 	shallow = true
-[submodule "parts"]
-	path = parts
+[submodule "libraries/fritzing-parts-extra"]
+	path = libraries/fritzing-parts-extra
 	url = https://github.com/LeonFedotov/fritzing-parts-extra.git
 	shallow = true

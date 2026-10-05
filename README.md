@@ -186,8 +186,8 @@ The breadboard and schematic views are rendered; the PCB view is not, yet.
 ## Build
 
 Clone with `--recurse-submodules`: Adafruit's and SparkFun's Fritzing
-libraries are submodules under `libraries/`, and fritzing-parts-extra is
-`parts/` (`fetch-vendor.sh` initializes them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
+libraries and fritzing-parts-extra are submodules under `libraries/`
+(`fetch-vendor.sh` initializes them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
 reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 (or `-DFRITZING_APP=...`). Or build the image: `docker build -t fritzing-render .`
 
@@ -286,11 +286,11 @@ including the examples here, are under their own terms:
 - [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
 - [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
 - DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched
-- [fritzing-parts-extra](https://github.com/LeonFedotov/fritzing-parts-extra) (RedBear BLE Nano v1.5, ODROID-SHOW2): CC BY-SA 4.0, submodule `parts/`
+- [fritzing-parts-extra](https://github.com/LeonFedotov/fritzing-parts-extra) (RedBear BLE Nano v1.5, ODROID-SHOW2): CC BY-SA 4.0, submodule
 
 ## Parts made here
 
-[`parts/`](parts) is the submodule
+[`libraries/fritzing-parts-extra`](libraries/fritzing-parts-extra) is the submodule
 [fritzing-parts-extra](https://github.com/LeonFedotov/fritzing-parts-extra):
 parts for boards no library has, drawn from their makers' published design
 files, with their pinouts, sources and generators. It is searched with the
