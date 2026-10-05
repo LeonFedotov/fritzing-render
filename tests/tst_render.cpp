@@ -11,6 +11,7 @@
 
 #include "fzp.h"
 #include "fzz.h"
+#include "generated.h"
 #include "partlib.h"
 #include "render.h"
 #include "sketch.h"
@@ -94,7 +95,7 @@ private Q_SLOTS:
 
 	void resolveByPathModuleIdAndTitle() {
 		const auto entries = partlib::index(FixtureRoots);
-		QCOMPARE(entries.size(), 6);
+		QCOMPARE(entries.size(), 7);
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "core/testpart.fzp").endsWith("testpart.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "FlatModuleID").endsWith("part.flat.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "test part").endsWith("testpart.fzp"));
@@ -156,7 +157,7 @@ private Q_SLOTS:
 	void searchNeedsEveryWord() {
 		const auto entries = partlib::index(FixtureRoots);
 		QCOMPARE(partlib::search(entries, "flat part", 10).size(), 1);
-		QCOMPARE(partlib::search(entries, "part", 10).size(), 3);
+		QCOMPARE(partlib::search(entries, "part", 10).size(), 4);
 		QCOMPARE(partlib::search(entries, "part zebra", 10).size(), 0);
 	}
 
@@ -430,6 +431,16 @@ private Q_SLOTS:
 		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
 	}
 
+	void generatedPinHeadersHaveASchematic() {
+		QTemporaryDir dir;
+		const render::LoadedPart lp = render::loadPart(generated::make("generic_female_pin_header_3_100mil", dir.path()), sketch::SchematicView);
+		QVERIFY2(lp.error.isEmpty(), qPrintable(lp.error));
+		QCOMPARE(lp.connectors.size(), 3);
+		QVERIFY(qAbs(lp.size.height() - 27) < 0.01);  // 0.1 in a pin
+		QVERIFY(qAbs(lp.connectors[1].local.y() - lp.connectors[0].local.y() - 9) < 0.01);
+		QVERIFY(lp.connectors[0].local.x() < 1);       // pins end on the left
+	}
+
 	void fzRendersTransformsCurvesAndLegs() {
 		fzz::Loaded l = fixtureSketch();
 		l.sketch.margin = 0;
@@ -477,6 +488,81 @@ private Q_SLOTS:
 		QVERIFY2(l.error.isEmpty(), qPrintable(l.error));
 		QVERIFY2(!l.warnings.join(' ').contains("not in the parts"), qPrintable(l.warnings.join('\n')));
 		QCOMPARE(l.sketch.parts.size(), 5);  // Arduino, potentiometer, LED, two half breadboards
+		const render::Result r = render::renderSketch(l.sketch, roots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+	}
+	void schematicReadsTheSchematicView() {
+		QTemporaryDir dir;
+		const fzz::Loaded l = fzz::load(readFile(Fixtures + "/schematic.fz"), FixtureRoots, dir.path(), sketch::SchematicView);
+		QVERIFY2(l.error.isEmpty(), qPrintable(l.error));
+		QCOMPARE(l.sketch.view, sketch::SchematicView);
+		QStringList ids;
+		for (const auto & p : l.sketch.parts) ids << p.id;
+		QVERIFY2(ids.contains("R1") && ids.contains("Net1") && ids.contains("VCC1"), qPrintable(ids.join(',')));
+		QVERIFY(!ids.contains("BB"));  // breadboard-only
+		QCOMPARE(partNamed(l.sketch, "R1")->transform->map(QPointF(0, 0)), QPointF(100, 50));
+		QCOMPARE(l.sketch.wires.size(), 5);  // the traces, not the breadboard wire
+		for (const auto & w : l.sketch.wires) {
+			QVERIFY(!w.shadow);
+			QVERIFY(qAbs(w.width - 0.875) < 1e-3);  // 9.72 mil
+		}
+	}
+
+	void schematicDotsMarkJunctions() {
+		QTemporaryDir dir;
+		const fzz::Loaded l = fzz::load(readFile(Fixtures + "/schematic.fz"), FixtureRoots, dir.path(), sketch::SchematicView);
+		// three traces meet at (60, 54.5); two leave R1's pin at (136, 54.5)
+		QCOMPARE(l.sketch.dots.size(), 2);
+		QVERIFY(l.sketch.dots.contains(QPointF(60, 54.5)));
+		QVERIFY(l.sketch.dots.contains(QPointF(136, 54.5)));
+	}
+
+	void schematicLabelsShowTitleAndProperties() {
+		QTemporaryDir dir;
+		const fzz::Loaded l = fzz::load(readFile(Fixtures + "/schematic.fz"), FixtureRoots, dir.path(), sketch::SchematicView);
+		const sketch::PartSpec * r1 = partNamed(l.sketch, "R1");
+		QCOMPARE(r1->label, QString("R1\n220Ω"));
+		QCOMPARE(*r1->labelAt, QPointF(102, 30));
+		QCOMPARE(r1->labelSize, 6 * 90 / 72.0);  // points to scene units
+		QVERIFY(partNamed(l.sketch, "Net1")->label.isEmpty());  // no titleGeometry: hidden
+	}
+
+	void schematicRendersSymbolsTracesAndDots() {
+		QTemporaryDir dir;
+		const fzz::Loaded l = fzz::load(readFile(Fixtures + "/schematic.fz"), FixtureRoots, dir.path(), sketch::SchematicView);
+		const render::Result r = render::renderSketch(l.sketch, FixtureRoots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QVERIFY(r.svg.contains(">SDA<"));    // the net label's text
+		QVERIFY(r.svg.contains(">3.3V<"));   // the power label's voltage
+		QVERIFY(r.svg.contains(">220Ω<"));   // R1's label, second line
+		QCOMPARE(r.svg.count("<circle"), 2);  // junction dots
+		QCOMPARE(r.svg.count("stroke='#404040'"), 5);  // one line per trace: no shadows
+		QVERIFY(r.svg.contains("#000000"));  // the drawing: R1's box
+	}
+
+	void netLabelPointsAtItsWire() {
+		QTemporaryDir dir;
+		const QString right = generated::netLabel("SDA", false, dir.path());
+		const QString left = generated::netLabel("SDA", true, dir.path());
+		QVERIFY(!right.isEmpty() && !left.isEmpty() && right != left);
+		const render::LoadedPart r = render::loadPart(right, sketch::SchematicView);
+		const render::LoadedPart lp = render::loadPart(left, sketch::SchematicView);
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QCOMPARE(r.connectors.size(), 1);
+		QVERIFY(qAbs(r.connectors[0].local.x() - r.size.width()) < 0.5);  // tip on the right
+		QVERIFY(qAbs(lp.connectors[0].local.x()) < 0.5);                  // tip on the left
+		QVERIFY(qAbs(r.size.height() - 9) < 0.01);                        // 0.1 in tall
+		QVERIFY(render::loadPart(generated::netLabel("A much longer net name", false, dir.path()), sketch::SchematicView).size.width() > r.size.width());
+	}
+
+	void vendorFritzingExampleSchematicRenders() {
+		const QString path = QStringLiteral(FR_FRITZING_APP) + "/sketches/core/AnalogInputPot.fzz";
+		if (!QFileInfo::exists(path) || !QFileInfo::exists(vendorPart("core"))) QSKIP("vendor parts or fritzing-app sketches missing");
+		QTemporaryDir dir;
+		const QStringList roots = partlib::defaultRoots();
+		const fzz::Loaded l = fzz::load(readFile(path), roots, dir.path(), sketch::SchematicView);
+		QVERIFY2(l.error.isEmpty(), qPrintable(l.error));
+		QVERIFY2(!l.warnings.join(' ').contains("not in the parts"), qPrintable(l.warnings.join('\n')));
 		const render::Result r = render::renderSketch(l.sketch, roots, {});
 		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
 	}

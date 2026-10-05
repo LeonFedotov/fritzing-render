@@ -1,13 +1,16 @@
 // fritzing-render: Fritzing breadboard diagrams to SVG/PNG without the app.
 //
 //   fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]
+//                          [--view breadboard|schematic]
 //   fritzing-render search <words...> [--limit 20] [--json]
 //   fritzing-render part <fzp path | moduleId | title> [--json]
 //
 // Library roots: FRITZING_PARTS (colon-separated), else the build's vendor/.
 
 #include <QApplication>
+#include <QDirIterator>
 #include <QFile>
+#include <QFontDatabase>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -36,6 +39,7 @@ QTextStream & err() {
 int usage() {
 	err() << "usage:\n"
 	         "  fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 150] [--transparent]\n"
+	         "                         [--view breadboard|schematic]   (schematic: .fzz/.fz only)\n"
 	         "  fritzing-render search <words...> [--limit 20] [--json]\n"
 	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n";
 	return 2;
@@ -129,7 +133,9 @@ int cmdRender(QStringList args) {
 	const QString pngOut = option(args, "--png");
 	const double ppi = option(args, "--ppi", "150").toDouble();
 	const bool transparent = flag(args, "--transparent");
-	if (args.size() != 1) return usage();
+	const QString viewArg = option(args, "--view", "breadboard");
+	if (args.size() != 1 || (viewArg != "breadboard" && viewArg != "schematic")) return usage();
+	const QString view = viewArg == "schematic" ? sketch::SchematicView : sketch::BreadboardView;
 	const QByteArray input = readInput(args.first());
 	if (input.isEmpty()) {
 		err() << "cannot read " << args.first() << "\n";
@@ -139,6 +145,11 @@ int cmdRender(QStringList args) {
 	QStringList warnings;
 	render::Result r;
 	if (fzz::detect(input) == fzz::Format::Json) {
+		if (view != sketch::BreadboardView) {
+			err() << "JSON sketches have breadboard positions only; the schematic view needs an .fzz or .fz "
+			         "(see https://github.com/LeonFedotov/fritzing-render/issues/1)\n";
+			return 1;
+		}
 		const sketch::ParseResult parsed = sketch::parse(input);
 		if (!parsed.error.isEmpty()) {
 			err() << parsed.error << "\n";
@@ -148,7 +159,7 @@ int cmdRender(QStringList args) {
 	} else {
 		// A Fritzing sketch: its parts come resolved to files, some perhaps unpacked here.
 		const QTemporaryDir work;
-		const fzz::Loaded loaded = fzz::load(input, roots, work.path());
+		const fzz::Loaded loaded = fzz::load(input, roots, work.path(), view);
 		if (!loaded.error.isEmpty()) {
 			err() << loaded.error << "\n";
 			return 1;
@@ -187,6 +198,9 @@ int main(int argc, char * argv[]) {
 	// Font fallbacks, and part drawings Qt's SVG renderer finds fault with, are not the user's to fix.
 	if (qEnvironmentVariableIsEmpty("QT_LOGGING_RULES")) qputenv("QT_LOGGING_RULES", "qt.qpa.fonts=false;qt.svg=false");
 	QApplication app(argc, argv);
+	// Fritzing's fonts (Droid Sans, Noto Sans, OCR-A, ...), which part drawings and labels name.
+	QDirIterator fonts(QStringLiteral(FR_FRITZING_APP) + "/resources/fonts", {"*.ttf", "*.otf"}, QDir::Files, QDirIterator::Subdirectories);
+	while (fonts.hasNext()) QFontDatabase::addApplicationFont(fonts.next());
 	QStringList args = app.arguments().mid(1);
 	if (args.isEmpty()) return usage();
 	const QString cmd = args.takeFirst();

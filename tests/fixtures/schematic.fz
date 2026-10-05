@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The schematic view of a small sketch: a part with a label, traces that
+     meet (junction dots), a net label and a power label, and what the view
+     leaves out (breadboard wires, breadboard-only parts). -->
+<module fritzingVersion="1.0.8">
+  <instances>
+    <instance moduleIdRef="SchemPartModuleID" modelIndex="1" path="schempart.fzp">
+      <property name="resistance" value="220Ω"/>
+      <title>R1</title>
+      <views>
+        <breadboardView layer="breadboard"><geometry z="2.5" x="0" y="0"/></breadboardView>
+        <schematicView layer="schematic">
+          <geometry z="2.5" x="100" y="50"/>
+          <titleGeometry visible="true" x="102" y="30" z="7" xOffset="0" yOffset="0" textColor="#000000" fontSize="6">
+            <displayKey key=""/>
+            <displayKey key="resistance"/>
+          </titleGeometry>
+        </schematicView>
+      </views>
+    </instance>
+    <!-- a breadboard: no schematic -->
+    <instance moduleIdRef="TestPartModuleID" modelIndex="2" path="testpart.fzp">
+      <title>BB</title>
+      <views>
+        <breadboardView layer="breadboardbreadboard"><geometry z="1" x="0" y="0"/></breadboardView>
+        <schematicView layer="breadboardbreadboard"><geometry z="1" x="0" y="0"/></schematicView>
+      </views>
+    </instance>
+    <instance moduleIdRef="NetLabelModuleID" modelIndex="3" path="netlabel.fzp">
+      <property name="label" value="SDA"/>
+      <title>Net1</title>
+      <views><schematicView layer="schematic"><geometry z="2.5" x="200" y="100"/></schematicView></views>
+    </instance>
+    <instance moduleIdRef="PowerLabelModuleID" modelIndex="4" path="power_label.fzp">
+      <property name="voltage" value="3.3"/>
+      <title>VCC1</title>
+      <views><schematicView layer="schematic"><geometry z="2.5" x="20" y="0"/></schematicView></views>
+    </instance>
+    <!-- three traces meeting at (60, 54.5): a junction -->
+    <instance moduleIdRef="WireModuleID" modelIndex="10" path="wire.fzp">
+      <title>Wire10</title>
+      <views><schematicView layer="schematicTrace">
+        <geometry z="5" x="100" y="54.5" x1="0" y1="0" x2="-40" y2="0" wireFlags="128"/>
+        <wireExtras mils="9.7222" color="#404040" opacity="1" banded="0"/>
+        <connectors>
+          <connector connectorId="connector0" layer="schematicTrace"><geometry x="0" y="0"/>
+            <connects><connect connectorId="connector0" modelIndex="1" layer="schematic"/></connects></connector>
+          <connector connectorId="connector1" layer="schematicTrace"><geometry x="0" y="0"/>
+            <connects><connect connectorId="connector0" modelIndex="11" layer="schematicTrace"/><connect connectorId="connector0" modelIndex="12" layer="schematicTrace"/></connects></connector>
+        </connectors>
+      </schematicView></views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="11" path="wire.fzp">
+      <title>Wire11</title>
+      <views><schematicView layer="schematicTrace">
+        <geometry z="5" x="60" y="54.5" x1="0" y1="0" x2="0" y2="-40" wireFlags="128"/>
+        <wireExtras mils="9.7222" color="#404040" opacity="1" banded="0"/>
+        <connectors>
+          <connector connectorId="connector0" layer="schematicTrace"><geometry x="0" y="0"/>
+            <connects><connect connectorId="connector1" modelIndex="10" layer="schematicTrace"/><connect connectorId="connector0" modelIndex="12" layer="schematicTrace"/></connects></connector>
+        </connectors>
+      </schematicView></views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="12" path="wire.fzp">
+      <title>Wire12</title>
+      <views><schematicView layer="schematicTrace">
+        <geometry z="5" x="60" y="54.5" x1="0" y1="0" x2="0" y2="40" wireFlags="128"/>
+        <wireExtras mils="9.7222" color="#404040" opacity="1" banded="0"/>
+        <connectors>
+          <connector connectorId="connector0" layer="schematicTrace"><geometry x="0" y="0"/>
+            <connects><connect connectorId="connector1" modelIndex="10" layer="schematicTrace"/><connect connectorId="connector0" modelIndex="11" layer="schematicTrace"/></connects></connector>
+        </connectors>
+      </schematicView></views>
+    </instance>
+    <!-- two traces on R1's right pin (136, 54.5): a dot there -->
+    <instance moduleIdRef="WireModuleID" modelIndex="13" path="wire.fzp">
+      <title>Wire13</title>
+      <views><schematicView layer="schematicTrace">
+        <geometry z="5" x="136" y="54.5" x1="0" y1="0" x2="40" y2="0" wireFlags="128"/>
+        <wireExtras mils="9.7222" color="#404040" opacity="1" banded="0"/>
+        <connectors>
+          <connector connectorId="connector0" layer="schematicTrace"><geometry x="0" y="0"/>
+            <connects><connect connectorId="connector1" modelIndex="1" layer="schematic"/></connects></connector>
+        </connectors>
+      </schematicView></views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="14" path="wire.fzp">
+      <title>Wire14</title>
+      <views><schematicView layer="schematicTrace">
+        <geometry z="5" x="136" y="54.5" x1="0" y1="0" x2="0" y2="30" wireFlags="128"/>
+        <wireExtras mils="9.7222" color="#404040" opacity="1" banded="0"/>
+        <connectors>
+          <connector connectorId="connector0" layer="schematicTrace"><geometry x="0" y="0"/>
+            <connects><connect connectorId="connector1" modelIndex="1" layer="schematic"/></connects></connector>
+        </connectors>
+      </schematicView></views>
+    </instance>
+    <!-- a breadboard wire: Fritzing saves a schematicView for it too -->
+    <instance moduleIdRef="WireModuleID" modelIndex="15" path="wire.fzp">
+      <title>Wire15</title>
+      <views>
+        <breadboardView layer="breadboardWire"><geometry z="3.5" x="0" y="0" x1="0" y1="0" x2="10" y2="0" wireFlags="64"/><wireExtras mils="22.2222" color="#418dd9"/></breadboardView>
+        <schematicView layer="schematicTrace"><geometry z="5" x="0" y="0" x1="0" y1="0" x2="500" y2="500" wireFlags="64"/><wireExtras mils="22.2222" color="#418dd9"/></schematicView>
+      </views>
+    </instance>
+  </instances>
+</module>

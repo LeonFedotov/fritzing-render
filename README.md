@@ -1,8 +1,9 @@
 # fritzing-render
 
-Renders Fritzing breadboard diagrams to SVG and PNG without the Fritzing app,
-using Fritzing's own SVG code and its parts libraries: sketches saved by the
-Fritzing app (`.fzz`), or diagrams described in JSON. Comes with a CLI and an
+Renders Fritzing breadboard diagrams and schematics to SVG and PNG without
+the Fritzing app, using Fritzing's own SVG code and its parts libraries:
+sketches saved by the Fritzing app (`.fzz`, breadboard or schematic view),
+or breadboard diagrams described in JSON. Comes with a CLI and an
 MCP server, so an agent can search parts, read their pins, render a diagram
 and look at the image. A [Docker image](#docker) has it all, parts included.
 
@@ -138,11 +139,22 @@ those pieces are reimplemented in `src/`, following the originals:
 - `partlib.cpp`: finding parts and their SVGs in the libraries
 - `render.cpp`: the compose loop, wires (`Wire::makeWireSVG`: a 2-unit line over a 4-unit shadow, colors from Fritzing's `ratsnestcolors.xml`) and unbent legs (`ConnectorItem::makeLegSvg`)
 
+![The schematic view of Fritzing's AnalogInputPot example](examples/analog-input-pot-schematic.png)
+
+*The schematic view of Fritzing's own `AnalogInputPot` example sketch, as `--view schematic` draws it.*
+
 Fritzing sketches (`.fzz`, a zip of the `.fz` XML and any parts it
-bundles) are read in `fzz.cpp`: each breadboard-view part with its saved
+bundles) are read in `fzz.cpp`, one view at a time: each breadboard-view part with its saved
 transform, LED color and bent legs; each breadboard wire, curves included,
 leaving out PCB and schematic traces and wires to items the view hides, as
-Fritzing does. Parts are found by module id, in the bundled copies first,
+Fritzing does. The schematic view reads the parts' schematic positions, the
+traces (one line each, no shadow) and the part labels Fritzing shows
+(title and chosen properties, where it put them), and adds the dots
+Fritzing draws where three traces meet or two leave one pin. Net labels
+and power labels are drawn as Fritzing's `NetLabel` and
+`SymbolPaletteItem` draw them, with their text, and ground and power symbols
+come from Fritzing's own resources. JSON sketches have breadboard
+positions only, so they have no schematic yet ([#1](https://github.com/LeonFedotov/fritzing-render/issues/1)). Parts are found by module id, in the bundled copies first,
 then the libraries, obsolete parts included. Generic pin headers, which
 Fritzing generates rather than ships, are made from its templates
 (`generated.cpp`). Notes, and parts no library has (DIP and mystery chips,
@@ -157,7 +169,7 @@ Two deliberate differences from Fritzing's export:
   parts) or the whole part.
 - Unbent legs are drawn straight; there is no way to describe bent legs yet.
 
-Only the breadboard view is rendered so far.
+The breadboard and schematic views are rendered; the PCB view is not, yet.
 
 ## Build
 
@@ -183,6 +195,7 @@ build/fritzing-render search arduino nano                   # titles and the "pa
 build/fritzing-render part "core/Arduino Nano3(fix).fzp"    # size and connectors
 build/fritzing-render render examples/smoke.json -o out.svg --png out.png --ppi 200
 build/fritzing-render render ../fritzing-app/sketches/core/Button.fzz --png button.png
+build/fritzing-render render ../fritzing-app/sketches/core/Button.fzz --view schematic --png button-schematic.png
 ```
 
 `render` takes a JSON sketch, an `.fzz` or an `.fz`, told apart by their
@@ -223,7 +236,7 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 `mcp/` wraps the CLI as an MCP server with four tools: `search_parts`,
 `describe_part`, `render_diagram`, which renders a diagram given as parts
 and wires, and `render_fritzing_sketch`, which renders a sketch file (`.fzz`,
-`.fz` or JSON) by path. The two render tools return the PNG as an image, with
+`.fz` or JSON) by path, in the breadboard or (for `.fzz`/`.fz`) schematic view. The two render tools return the PNG as an image, with
 any warnings, and can save the SVG and PNG.
 
 ```sh

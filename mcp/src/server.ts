@@ -160,17 +160,19 @@ server.registerTool(
   {
     title: 'Render a Fritzing sketch file',
     description:
-      'Render the breadboard view of a Fritzing sketch file (.fzz, as saved by the Fritzing app, or a bare .fz) to an image (returned as PNG), ' +
-      'optionally saving the SVG and PNG. Parts bundled in the .fzz are used, and generic pin headers are generated as Fritzing does. ' +
-      'Also takes a JSON sketch file in render_diagram\'s format. Notes and parts no library has are left out, and listed as warnings.',
+      'Render the breadboard or schematic view of a Fritzing sketch file (.fzz, as saved by the Fritzing app, or a bare .fz) to an image ' +
+      '(returned as PNG), optionally saving the SVG and PNG. Parts bundled in the .fzz are used, and parts Fritzing generates (pin headers, ' +
+      'net labels, power and ground symbols) are made as it does. Also takes a JSON sketch file in render_diagram\'s format (breadboard only). ' +
+      'Notes and parts no library has are left out, and listed as warnings.',
     inputSchema: {
       path: z.string().min(1).describe('the sketch file; a relative path is taken from the server\'s working directory'),
+      view: z.enum(['breadboard', 'schematic']).default('breadboard'),
       ...imageOptions,
     },
   },
-  async ({ path, ppi, transparent, save_svg, save_png }) => {
+  async ({ path, view, ppi, transparent, save_svg, save_png }) => {
     try {
-      const out = await renderSketchFile(bin, resolve(path), { ppi, transparent })
+      const out = await renderSketchFile(bin, resolve(path), { ppi, transparent, view })
       const saved = await save(out, save_svg, save_png)
       return imageResult(out, renderSummary(resolve(path), out, saved))
     } catch (error) {

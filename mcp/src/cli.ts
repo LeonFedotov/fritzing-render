@@ -54,7 +54,9 @@ export type Sketch = {
   margin?: number
 }
 
-export type RenderOptions = { ppi?: number, transparent?: boolean }
+export type View = 'breadboard' | 'schematic'
+
+export type RenderOptions = { ppi?: number, transparent?: boolean, view?: View }
 
 export type Rendered = { png: Buffer, svg: string, warnings: string[] }
 
@@ -62,9 +64,9 @@ export function binaryPath(env: Record<string, string | undefined>, repoRoot: st
   return env.FRITZING_RENDER_BIN ?? join(repoRoot, 'build', 'fritzing-render')
 }
 
-export function renderArgs(o: { sketchFile: string, svgFile: string, pngFile: string, ppi: number, transparent: boolean }): string[] {
+export function renderArgs(o: { sketchFile: string, svgFile: string, pngFile: string, ppi: number, transparent: boolean, view?: View }): string[] {
   const args = ['render', o.sketchFile, '-o', o.svgFile, '--png', o.pngFile, '--ppi', String(o.ppi)]
-  return o.transparent ? [...args, '--transparent'] : args
+  return [...args, ...(o.view && o.view !== 'breadboard' ? ['--view', o.view] : []), ...(o.transparent ? ['--transparent'] : [])]
 }
 
 export function formatSearch(hits: PartHit[]): string {
@@ -124,7 +126,7 @@ export async function describePart(bin: string, ref: string): Promise<PartInfo> 
 async function renderFile(bin: string, dir: string, sketchFile: string, options: RenderOptions): Promise<Rendered> {
   const svgFile = join(dir, 'out.svg')
   const pngFile = join(dir, 'out.png')
-  const { stderr } = await run(bin, renderArgs({ sketchFile, svgFile, pngFile, ppi: options.ppi ?? 150, transparent: options.transparent ?? false }))
+  const { stderr } = await run(bin, renderArgs({ sketchFile, svgFile, pngFile, ppi: options.ppi ?? 150, transparent: options.transparent ?? false, view: options.view }))
   return { png: await readFile(pngFile), svg: await readFile(svgFile, 'utf8'), warnings: parseWarnings(stderr) }
 }
 

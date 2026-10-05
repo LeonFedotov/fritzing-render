@@ -44,6 +44,10 @@
 
 namespace sketch {
 
+// Fritzing's view names; a sketch draws one of them.
+inline const QString BreadboardView = QStringLiteral("breadboardView");
+inline const QString SchematicView = QStringLiteral("schematicView");
+
 struct Generic {
 	QString title;
 	QStringList pins;
@@ -70,6 +74,11 @@ struct PartSpec {
 	std::optional<QTransform> transform;
 	double z = 0;
 	QHash<QString, Leg> legs;
+	// From a .fz: where Fritzing put the part's label (scene), its font size
+	// (scene units) and color; lines of `label` are separated by \n.
+	std::optional<QPointF> labelAt;
+	double labelSize = 0;
+	QString labelColor;
 };
 
 struct WireSpec {
@@ -90,12 +99,15 @@ struct WireSpec {
 	QPointF p2;
 	QPolygonF curve;
 	double width = 2;  // scene units: Fritzing's default 22.2 mil wire
+	bool shadow = true;  // breadboard wires have one; schematic traces don't
 };
 
 struct Sketch {
 	QList<PartSpec> parts;
 	QList<WireSpec> wires;
 	double margin = 18;
+	QString view = BreadboardView;  // which of a part's views is drawn
+	QList<QPointF> dots;            // schematic junction dots, scene
 };
 
 struct ParseResult {

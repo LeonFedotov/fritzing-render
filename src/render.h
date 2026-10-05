@@ -45,9 +45,11 @@ struct LoadedPart {
 	QList<ConnectorPoint> connectors;
 	QString generatedSvg;  // generic parts: their drawing, in export units
 	QString error;
+	QString view = sketch::BreadboardView;
 };
 
-LoadedPart loadPart(const QString & fzpPath);
+// A part as drawn in one view (sketch::BreadboardView or SchematicView).
+LoadedPart loadPart(const QString & fzpPath, const QString & view = sketch::BreadboardView);
 
 // A labelled block with header pins (0.1 in apart) along its bottom edge,
 // for parts the libraries don't have; drawn like Fritzing's mystery part.

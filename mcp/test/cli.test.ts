@@ -31,6 +31,7 @@ test('renderArgs writes both files and passes ppi and transparency', () => {
     'render', 's.json', '-o', 'o.svg', '--png', 'o.png', '--ppi', '200',
   ])
   assert.deepEqual(renderArgs({ sketchFile: 's.json', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: true }).at(-1), '--transparent')
+  assert.deepEqual(renderArgs({ sketchFile: 's.fzz', svgFile: 'o.svg', pngFile: 'o.png', ppi: 150, transparent: false, view: 'schematic' }).slice(-2), ['--view', 'schematic'])
 })
 
 test('parseWarnings keeps the CLI\'s warning lines', () => {
@@ -109,4 +110,18 @@ test('renders a Fritzing .fzz file, with its bundled parts', { skip: !existsSync
 
 test('sketch file errors come back as messages', { skip: !existsSync(bin) && 'build first' }, async () => {
   await assert.rejects(renderSketchFile(bin, join(repoRoot, 'tests/fixtures/missing.fzz'), {}), /cannot read/)
+})
+
+test('renders the schematic view of a .fz', { skip: !existsSync(bin) && 'build first' }, async () => {
+  const roots = ['parts', 'fzpz'].map(r => join(repoRoot, 'tests/fixtures', r)).join(':')
+  const saved = process.env.FRITZING_PARTS
+  process.env.FRITZING_PARTS = roots
+  try {
+    const out = await renderSketchFile(bin, join(repoRoot, 'tests/fixtures/schematic.fz'), { ppi: 90, view: 'schematic' })
+    assert.match(out.svg, />SDA</)
+    assert.match(out.svg, /<circle/)
+  } finally {
+    if (saved === undefined) delete process.env.FRITZING_PARTS
+    else process.env.FRITZING_PARTS = saved
+  }
 })

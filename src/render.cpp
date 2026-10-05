@@ -19,7 +19,8 @@ namespace render {
 
 namespace {
 
-const QString BreadboardView = "breadboardView";
+using sketch::BreadboardView;
+using sketch::SchematicView;
 
 struct WireColor {
 	QString wire;
@@ -52,9 +53,10 @@ WireColor wireColor(const QString & spec, const QHash<QString, WireColor> & pale
 	return WireColor{c.name(), c.darker(150).name()};
 }
 
+// The layer a view's drawing is split out by: its main one.
 QString pickLayer(const fzp::View & view) {
 	for (const QString & l : view.layers) {
-		if (l == "breadboard") return l;
+		if (l == "breadboard" || l == "schematic") return l;
 	}
 	return view.layers.value(0);
 }
@@ -152,11 +154,12 @@ QString partSvg(const LoadedPart & lp, const QString & fill, QString & error) {
 	if (!fill.isEmpty()) slamColor(doc.documentElement(), fill);
 	// ItemBase::setUpImage: a view with one layer is the whole drawing (as the
 	// app shows it; its SVG export splits even those); with several, each
-	// layer is split out. A drawing without the layer's group is drawn whole too.
+	// layer is split out. A drawing without the layer's group is drawn whole
+	// too, and so is a schematic, whose layers (symbol, text) are all drawn.
 	SvgFileSplitter splitter;
 	QString whole = doc.toString();
-	const bool singleLayer = lp.part.views.value(BreadboardView).layers.size() <= 1;
-	const bool split = !singleLayer && splitter.splitString(whole, lp.layerId);
+	const bool whole_ = lp.view == SchematicView || lp.part.views.value(lp.view).layers.size() <= 1;
+	const bool split = !whole_ && splitter.splitString(whole, lp.layerId);
 	if (!split) {
 		QString wrapped = wrapInLayer(doc, lp.layerId);
 		if (!splitter.splitString(wrapped, lp.layerId)) {
@@ -185,6 +188,26 @@ QString labelSvg(const QString & text, QPointF scenePos) {
 	    .arg(toExport(scenePos.y()))
 	    .arg(toExport(9))
 	    .arg(text.toHtmlEscaped());
+}
+
+// PartLabel::makeSvgAux: a line per entry, the first a font size below the
+// label's top-left corner, in Droid Sans.
+QString placedLabelSvg(const QString & text, QPointF topLeft, double size, const QString & color) {
+	QString out = QString("<g font-family='Droid Sans, Helvetica, Arial, sans-serif' font-size='%1' fill='%2'>")
+	                  .arg(toExport(size))
+	                  .arg(color.isEmpty() ? "#000000" : color);
+	const QStringList lines = text.split('\n');
+	for (int i = 0; i < lines.size(); i++) {
+		out += QString("<text x='%1' y='%2'>%3</text>").arg(toExport(topLeft.x())).arg(toExport(topLeft.y() + size * (i + 1))).arg(lines[i].toHtmlEscaped());
+	}
+	return out + "</g>";
+}
+
+QRectF placedLabelRect(const sketch::PartSpec & spec) {
+	const QStringList lines = spec.label.split('\n');
+	qsizetype longest = 0;
+	for (const QString & l : lines) longest = qMax(longest, l.size());
+	return QRectF(*spec.labelAt, QSizeF(longest * spec.labelSize * 0.6, spec.labelSize * (lines.size() + 0.3)));
 }
 
 QString exportPoint(QPointF p) {
@@ -226,27 +249,28 @@ QString connectorList(const LoadedPart & lp) {
 
 }  // namespace
 
-LoadedPart loadPart(const QString & fzpPath) {
+LoadedPart loadPart(const QString & fzpPath, const QString & view) {
 	LoadedPart lp;
+	lp.view = view;
 	lp.part = fzp::read(fzpPath);
 	if (!lp.part.ok) {
 		lp.error = lp.part.error;
 		return lp;
 	}
-	if (!lp.part.views.contains(BreadboardView)) {
-		lp.error = lp.part.title + " has no breadboard view";
+	if (!lp.part.views.contains(view)) {
+		lp.error = QString("%1 has no %2").arg(lp.part.title, QString(view).replace("View", " view"));
 		return lp;
 	}
-	lp.layerId = pickLayer(lp.part.views.value(BreadboardView));
-	lp.svgPath = partlib::imagePath(lp.part, BreadboardView);
+	lp.layerId = pickLayer(lp.part.views.value(view));
+	lp.svgPath = partlib::imagePath(lp.part, view);
 	if (lp.svgPath.isEmpty()) {
-		lp.error = QString("breadboard SVG %1 of %2 not found").arg(lp.part.views.value(BreadboardView).image, fzpPath);
+		lp.error = QString("%1 SVG %2 of %3 not found").arg(QString(view).remove("View"), lp.part.views.value(view).image, fzpPath);
 		return lp;
 	}
 
 	LoadInfo info(lp.svgPath);
 	for (const fzp::Connector & c : lp.part.connectors) {
-		const fzp::ConnectorView v = c.views.value(BreadboardView);
+		const fzp::ConnectorView v = c.views.value(view);
 		if (v.svgId.isEmpty()) continue;
 		info.connectorIDs << v.svgId;
 		if (!v.terminalId.isEmpty()) info.terminalIDs << v.terminalId;
@@ -261,9 +285,9 @@ LoadedPart loadPart(const QString & fzpPath) {
 
 	for (const fzp::Connector & c : lp.part.connectors) {
 		ConnectorPoint cp{c.id, c.name, c.description, {}, false};
-		const fzp::ConnectorView v = c.views.value(BreadboardView);
+		const fzp::ConnectorView v = c.views.value(view);
 		if (!v.svgId.isEmpty()) {
-			SvgIdLayer layer(ViewLayer::BreadboardView);
+			SvgIdLayer layer(view == SchematicView ? ViewLayer::SchematicView : ViewLayer::BreadboardView);
 			layer.m_svgId = v.svgId;
 			layer.m_terminalId = v.terminalId;
 			layer.m_legId = v.legId;
@@ -328,7 +352,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 			result.error = QString("part %1: no part matches \"%2\" (try: fritzing-render search ...)").arg(spec.id, spec.part);
 			return result;
 		}
-		Placed p{spec, spec.part.isEmpty() ? genericPart(spec.generic) : loadPart(path), {}, {}};
+		Placed p{spec, spec.part.isEmpty() ? genericPart(spec.generic) : loadPart(path, sk.view), {}, {}};
 		if (!p.loaded.error.isEmpty()) {
 			result.error = QString("part %1: %2").arg(spec.id, p.loaded.error);
 			return result;
@@ -388,12 +412,13 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		QPolygonF curve;  // a curved wire's control points
 		WireColor color;
 		double width;
+		bool shadow;
 	};
 	const QHash<QString, WireColor> palette = loadWireColors();
 	QList<Line> lines;
 	for (const sketch::WireSpec & w : sk.wires) {
 		if (w.fixed) {
-			lines << Line{{w.p1, w.p2}, w.curve, wireColor(w.color, palette), w.width};
+			lines << Line{{w.p1, w.p2}, w.curve, wireColor(w.color, palette), w.width, w.shadow};
 			continue;
 		}
 		QPointF a, b;
@@ -403,7 +428,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 			result.error = QString("wire %1 -> %2: %3").arg(w.from, w.to, err);
 			return result;
 		}
-		Line line{{a}, {}, wireColor(w.color, palette), w.width};
+		Line line{{a}, {}, wireColor(w.color, palette), w.width, w.shadow};
 		line.points << w.via << b;
 		lines << line;
 	}
@@ -413,10 +438,16 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 	for (const QString & id : order) {
 		const Placed & p = placed[id];
 		bounds |= p.sceneRect;
-		if (!p.spec.label.isEmpty()) bounds |= QRectF(labelAnchor(p).x(), labelAnchor(p).y() - 10, p.spec.label.size() * 6, 14);
+		if (p.spec.label.isEmpty()) continue;
+		bounds |= p.spec.labelAt ? placedLabelRect(p.spec) : QRectF(labelAnchor(p).x(), labelAnchor(p).y() - 10, p.spec.label.size() * 6, 14);
 	}
 	for (const Line & l : lines) {
 		for (const QPointF & pt : l.points + l.curve) bounds |= QRectF(pt - QPointF(3, 3), QSizeF(6, 6));
+	}
+	// SchematicSketchWidget::makeCircleSVG: a dot twice the traces' width across
+	double dotRadius = 0.875;
+	for (const Line & l : lines) {
+		if (!l.shadow) dotRadius = qMax(dotRadius, l.width);
 	}
 	bounds.adjust(-sk.margin, -sk.margin, sk.margin, sk.margin);
 	const QPointF offset = bounds.topLeft();
@@ -441,7 +472,9 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		           .arg(toExport(t.dx() - offset.x()))
 		           .arg(toExport(t.dy() - offset.y()))
 		           .arg(svg + legsSvg(p.loaded, p.spec));
-		if (!p.spec.label.isEmpty()) out += labelSvg(p.spec.label, labelAnchor(p) - offset) + "\n";
+		if (p.spec.label.isEmpty()) continue;
+		out += (p.spec.labelAt ? placedLabelSvg(p.spec.label, *p.spec.labelAt - offset, p.spec.labelSize, p.spec.labelColor)
+		                       : labelSvg(p.spec.label, labelAnchor(p) - offset)) + "\n";
 	}
 
 	// Wire::makeWireSVG: a shadow 2 units wider under the line (the default
@@ -459,8 +492,13 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 		return svg;
 	};
 	out += "<g id='wires'>\n";
-	for (const Line & l : lines) out += stroke(l, l.width + 2, l.color.shadow);
+	for (const Line & l : lines) {
+		if (l.shadow) out += stroke(l, l.width + 2, l.color.shadow);
+	}
 	for (const Line & l : lines) out += stroke(l, l.width, l.color.wire);
+	for (const QPointF & d : sk.dots) {
+		out += QString("<circle fill='black' cx='%1' cy='%2' r='%3' stroke='none'/>").arg(toExport(d.x() - offset.x())).arg(toExport(d.y() - offset.y())).arg(toExport(dotRadius));
+	}
 	out += "</g>\n</svg>\n";
 
 	result.svg = out;

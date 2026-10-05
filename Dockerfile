@@ -7,7 +7,8 @@
 #     render sketch.fzz -o sketch.svg --png sketch.png                     # CLI
 
 # The fritzing-app commit whose sources are compiled in, and whose resources
-# (wire colors, LED colors, pin header templates, fonts) are used at run time.
+# (wire colors, LED colors, pin header templates, schematic symbols, fonts)
+# are used at run time.
 ARG FRITZING_APP_REF=5aa56a510183c23084990a6b4481708cad24c15b
 
 # Parts libraries and svgpp: the same for every platform, so fetched once.
@@ -68,6 +69,7 @@ RUN apt-get update \
 # What the renderer reads from fritzing-app at run time, at the path it was built with.
 COPY --from=fritzing-app /opt/fritzing-app/resources/ratsnestcolors.xml /opt/fritzing-app/resources/properties.xml /opt/fritzing-app/resources/
 COPY --from=fritzing-app /opt/fritzing-app/resources/templates /opt/fritzing-app/resources/templates
+COPY --from=fritzing-app /opt/fritzing-app/resources/parts /opt/fritzing-app/resources/parts
 # Fritzing's fonts (Droid Sans, OCR-A, ...), which part drawings name.
 COPY --from=fritzing-app /opt/fritzing-app/resources/fonts /usr/share/fonts/fritzing
 RUN fc-cache -f > /dev/null
