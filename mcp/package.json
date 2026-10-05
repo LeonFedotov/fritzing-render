@@ -1,6 +1,6 @@
 {
   "name": "fritzing-render-mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "MCP server for fritzing-render: search Fritzing parts, inspect connectors, render breadboard diagrams to images",
   "license": "GPL-3.0-or-later",
   "type": "module",

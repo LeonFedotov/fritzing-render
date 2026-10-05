@@ -24,7 +24,7 @@ import {
 
 const bin = binaryPath(process.env, resolve(import.meta.dirname, '../..'))
 
-const server = new McpServer({ name: 'fritzing-render', version: '0.3.0' })
+const server = new McpServer({ name: 'fritzing-render', version: '0.4.0' })
 
 function failure(error: unknown): { isError: true, content: { type: 'text', text: string }[] } {
   return { isError: true, content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }] }
