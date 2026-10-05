@@ -91,7 +91,7 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 - `label` draws text above the part (`labelBelow: true` puts it under).
 - `color` recolors a part's `color_*` elements, as Fritzing does for LEDs: a Fritzing LED color (`"Green (555nm)"`), a word (`green`: Fritzing's default shade) or `#rrggbb`.
 - Wire ends are `<part id>.<connector name or id>`; `via` adds bend points.
-- `color` is a Fritzing wire color (blue, red, black, yellow, green, grey, white, orange, ochre, cyan, brown, purple, pink) or `#rrggbb`.
+- A wire's `color` is a Fritzing wire color (blue, red, black, yellow, green, grey, white, orange, ochre, cyan, brown, purple, pink) or `#rrggbb`.
 
 ## MCP server
 
