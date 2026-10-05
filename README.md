@@ -162,8 +162,8 @@ Only the breadboard view is rendered so far.
 ## Build
 
 Clone with `--recurse-submodules`: Adafruit's and SparkFun's Fritzing
-libraries are submodules under `libraries/` (`fetch-vendor.sh` initializes
-them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
+libraries are submodules under `libraries/`, and fritzing-parts-extra is
+`parts/` (`fetch-vendor.sh` initializes them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
 reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 (or `-DFRITZING_APP=...`). Or build the image: `docker build -t fritzing-render .`
 
@@ -260,27 +260,20 @@ including the examples here, are under their own terms:
 - [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
 - [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
 - DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched
-- [`parts/`](parts): parts made here, CC BY-SA 4.0 (below)
+- [fritzing-parts-extra](https://github.com/LeonFedotov/fritzing-parts-extra) (RedBear BLE Nano v1.5, ODROID-SHOW2): CC BY-SA 4.0, submodule `parts/`
 
 ## Parts made here
 
-[`parts/`](parts) holds parts no library has, drawn from their makers'
-published design files; it is searched with the other libraries. Each
-folder is an unpacked `.fzpz`: zip its files to use the part in the Fritzing
-app.
+[`parts/`](parts) is the submodule
+[fritzing-parts-extra](https://github.com/LeonFedotov/fritzing-parts-extra):
+parts for boards no library has, drawn from their makers' published design
+files, with their pinouts, sources and generators. It is searched with the
+other libraries. So far:
 
-- **RedBear BLE Nano v1.5** (`RedBearBLENanoV1_5ModuleID`): pads, holes and
-  outline from RedBear's v1.5 gerbers and DXF, pin names from its pinout and
-  silkscreen ([redbear/nRF5x](https://github.com/redbear/nRF5x)). Two rows of
-  six header pins 0.6 in apart, so it straddles a breadboard's gap, plus the
-  five pads on the underside's bottom edge.
+- **RedBear BLE Nano v1.5** (`RedBearBLENanoV1_5ModuleID`), from RedBear's v1.5 gerbers and DXF
 
 ![RedBear BLE Nano v1.5](examples/ble-nano.png)
 
-- **Hardkernel ODROID-SHOW2** (`HardkernelOdroidShow2ModuleID`): outline,
-  holes, connectors and parts measured from Hardkernel's dimensioned board
-  render, the LCD from the Tianma TM022HDH26 datasheet, pins from the rev 0.1
-  schematic. Connectors: the I/O header P2 (P3V45, SCL, SDA, ADC3, INT0,
-  GND), the ISP header, the DTR jumper and the battery connector.
+- **Hardkernel ODROID-SHOW2** (`HardkernelOdroidShow2ModuleID`), from Hardkernel's dimensioned board render and schematic and the LCD's datasheet
 
 ![ODROID-SHOW2](examples/odroid-show2-part.png)
