@@ -21,6 +21,8 @@ COPY scripts/fetch-vendor.sh scripts/prune-vendor.sh scripts/
 # The submodules' part archives (check out with --recurse-submodules)
 COPY libraries/adafruit/parts libraries/adafruit/parts
 COPY libraries/sparkfun/products libraries/sparkfun/products
+COPY libraries/mgesteiro libraries/mgesteiro
+# libraries/seeed is left out: its repository states no licence to redistribute it.
 RUN scripts/fetch-vendor.sh && scripts/prune-vendor.sh
 
 FROM --platform=$BUILDPLATFORM debian:trixie-slim AS fritzing-app

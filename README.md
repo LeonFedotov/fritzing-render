@@ -18,8 +18,9 @@ docker pull ghcr.io/leonfedotov/fritzing-render
 ```
 
 For linux/amd64 and linux/arm64, with Fritzing's core parts (obsolete ones
-too, for old sketches), Adafruit's and SparkFun's libraries and the
-community parts listed under [Licence](#licence).
+too, for old sketches), Adafruit's, SparkFun's and mgesteiro's libraries and
+the community parts listed under [Licence](#licence). (Seeed's library is
+used by local builds but left out of the image: it states no licence.)
 With no arguments it runs the MCP server on stdio; `render`, `search` and
 `part` run the CLI, in `/work`:
 
@@ -185,8 +186,8 @@ The breadboard and schematic views are rendered; the PCB view is not, yet.
 
 ## Build
 
-Clone with `--recurse-submodules`: Adafruit's and SparkFun's Fritzing
-libraries and fritzing-parts-extra are submodules under `libraries/`
+Clone with `--recurse-submodules`: Adafruit's, SparkFun's, Seeed's and
+mgesteiro's Fritzing libraries and fritzing-parts-extra are submodules under `libraries/`
 (`fetch-vendor.sh` initializes them if you didn't). Needs Qt 6 (6.8 and 6.11 tested) with its private headers (for the zip
 reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 (or `-DFRITZING_APP=...`). Or build the image: `docker build -t fritzing-render .`
@@ -194,7 +195,7 @@ reader), Boost headers, CMake, and a fritzing-app checkout next to this repo
 ```sh
 brew install qt boost cmake
 git clone https://github.com/fritzing/fritzing-app ../fritzing-app
-scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, unpacked Adafruit and SparkFun parts, community parts
+scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, the unpacked libraries/ parts, community parts
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
 cmake --build build -j
 (cd build && ctest)
@@ -283,6 +284,8 @@ including the examples here, are under their own terms:
 - [fritzing-parts](https://github.com/fritzing/fritzing-parts): CC BY-SA 3.0, fetched
 - [adafruit/Fritzing-Library](https://github.com/adafruit/Fritzing-Library): CC BY-SA 3.0, submodule
 - [sparkfun/Fritzing_Parts](https://github.com/sparkfun/Fritzing_Parts): CC BY-SA 4.0, submodule
+- [Seeed-Studio/fritzing_parts](https://github.com/Seeed-Studio/fritzing_parts) (XIAO, Grove, Wio, LoRa-E5): no stated licence, submodule; not in the Docker image
+- [mgesteiro/fritzing-parts](https://github.com/mgesteiro/fritzing-parts) (SCD30, VL53L0X, 28BYJ-48, NodeMCU v3, ...): CC BY-SA 4.0, submodule
 - [TD-er/fritzing-parts](https://github.com/TD-er/fritzing-parts) (MH-Z19, NodeMCU, OLEDs): MIT, fetched
 - [otherguy/FeatherS2-Fritzing](https://github.com/otherguy/FeatherS2-Fritzing) (Unexpected Maker FeatherS2): MIT, fetched
 - DOIT ESP32 DevKit v1 (vanepp, Fritzing forum): no stated licence, fetched

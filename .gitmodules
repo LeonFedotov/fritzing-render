@@ -10,3 +10,11 @@
 	path = libraries/fritzing-parts-extra
 	url = https://github.com/LeonFedotov/fritzing-parts-extra.git
 	shallow = true
+[submodule "libraries/seeed"]
+	path = libraries/seeed
+	url = https://github.com/Seeed-Studio/fritzing_parts.git
+	shallow = true
+[submodule "libraries/mgesteiro"]
+	path = libraries/mgesteiro
+	url = https://github.com/mgesteiro/fritzing-parts.git
+	shallow = true

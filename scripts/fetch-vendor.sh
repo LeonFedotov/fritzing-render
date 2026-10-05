@@ -2,8 +2,9 @@
 # Fetches what the renderer builds against and renders from, into vendor/:
 # svgpp (header-only, used by Fritzing's TextUtils) and the parts libraries.
 # Fritzing's own sources are compiled in place from FRITZING_APP (default ../fritzing-app).
-# Adafruit's and SparkFun's libraries, and fritzing-parts-extra (parts drawn
-# for boards no library has), are submodules under libraries/.
+# Adafruit's, SparkFun's, Seeed's and mgesteiro's libraries, and
+# fritzing-parts-extra (parts drawn for boards no library has), are
+# submodules under libraries/.
 set -e
 cd "$(dirname "$0")/.."
 if [ -e .git ]; then git submodule update --init --depth 1; fi
@@ -23,6 +24,19 @@ unpack() {  # <folder of .fzpz files> <destination>
 }
 unpack ../libraries/adafruit/parts adafruit-parts
 unpack ../libraries/sparkfun/products sparkfun-parts
+
+# Libraries that keep their parts in subfolders, and bins (.fzbz) of loose
+# parts: every archive under the library, each into its own folder.
+unpack_tree() {  # <library> <destination>
+  [ -d "$1" ] && [ ! -d "$2" ] || return 0
+  mkdir "$2"
+  find "$1" \( -name '*.fzpz' -o -name '*.fzbz' \) -not -path '*/.git/*' | while read -r z; do
+    d="$2/$(echo "${z#"$1"/}" | sed 's|/|_|g; s|\.fz[pb]z$||')"
+    mkdir -p "$d" && unzip -q -o "$z" -d "$d"
+  done
+}
+unpack_tree ../libraries/seeed seeed-parts
+unpack_tree ../libraries/mgesteiro mgesteiro-parts
 
 # Community parts the main libraries lack, unpacked the same way:
 # TD-er/fritzing-parts (MIT): MH-Z19 CO2 sensor, NodeMCU, OLEDs, LuaNode32.

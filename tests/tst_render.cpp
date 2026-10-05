@@ -106,7 +106,7 @@ private Q_SLOTS:
 		qunsetenv("FRITZING_PARTS");
 		QStringList names;
 		for (const QString & root : partlib::defaultRoots()) names << QFileInfo(root).fileName();
-		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "community-parts", "fritzing-parts-extra"}));
+		QCOMPARE(names, QStringList({"fritzing-parts", "adafruit-parts", "sparkfun-parts", "seeed-parts", "mgesteiro-parts", "community-parts", "fritzing-parts-extra"}));
 	}
 
 	void ownPartsAreInTheLibrary() {

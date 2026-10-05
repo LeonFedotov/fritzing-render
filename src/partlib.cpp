@@ -52,8 +52,8 @@ QStringList defaultRoots() {
 	const QString env = qEnvironmentVariable("FRITZING_PARTS");
 	if (!env.isEmpty()) return env.split(':', Qt::SkipEmptyParts);
 	const QString vendor = QStringLiteral(FR_VENDOR_DIR);
-	return {vendor + "/fritzing-parts", vendor + "/adafruit-parts", vendor + "/sparkfun-parts", vendor + "/community-parts",
-	        QStringLiteral(FR_PARTS_DIR)};
+	return {vendor + "/fritzing-parts", vendor + "/adafruit-parts", vendor + "/sparkfun-parts", vendor + "/seeed-parts",
+	        vendor + "/mgesteiro-parts", vendor + "/community-parts", QStringLiteral(FR_PARTS_DIR)};
 }
 
 // .fzp files under `dir`, not descending into svg/ (thousands of drawings,
