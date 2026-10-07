@@ -57,7 +57,7 @@ if [ ! -d community-parts ]; then
     mkdir -p "$d" && unzip -q -o "$z" -d "$d"
   done
   curl -fsSL -o "community-doit-esp32.fzpz" \
-    "https://raw.githubusercontent.com/jorgechacblogspot/librerias_fritzing/main/DOIT%20Esp32%20DevKit%20v1%20improved.fzpz"
+    "https://raw.githubusercontent.com/jorgechacblogspot/librerias_fritzing/1b1c2a549d962e2ac689babb7df24ed5ba30d2ac/DOIT%20Esp32%20DevKit%20v1%20improved.fzpz"
   mkdir -p "community-parts/DOIT Esp32 DevKit v1 improved"
   unzip -q -o community-doit-esp32.fzpz -d "community-parts/DOIT Esp32 DevKit v1 improved"
   curl -fsSL -o "community-feathers2.fzpz" \

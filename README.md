@@ -5,7 +5,9 @@ the Fritzing app, using Fritzing's own SVG code and its parts libraries:
 sketches saved by the Fritzing app (`.fzz`, breadboard or schematic view),
 or breadboard diagrams described in JSON. Comes with a CLI and an
 MCP server, so an agent can search parts, read their pins, render a diagram
-and look at the image. A [Docker image](#docker) has it all, parts included.
+and look at the image. A [Docker image](#docker) has it all, parts included,
+and the [live demo](https://leonfedotov.github.io/fritzing-render/) runs it in
+your browser.
 
 ![ESP32 air station](examples/esp32-air-station.png)
 
@@ -116,6 +118,31 @@ docker run --rm -v "$PWD:/work" ghcr.io/leonfedotov/fritzing-render render blink
 `blink.png`:
 
 ![The blink sketch rendered: an Arduino Uno wired to an LED and resistor on a half breadboard](examples/blink.png)
+
+## In the browser
+
+**[leonfedotov.github.io/fritzing-render](https://leonfedotov.github.io/fritzing-render/)**
+renders the examples live and any `.fzz`, `.fz` or JSON sketch you drop on
+it, in both views and both themes, with SVG and PNG downloads. The renderer
+is compiled to WebAssembly with Qt for WebAssembly (`src/wasm.cpp`); the page
+(`web/`) loads a parts index of every library here (`fritzing-render index`,
+mapped to each library's GitHub repository at the commit this checkout pins)
+and fetches the parts a sketch names from GitHub before rendering it, so a
+sketch needn't bundle library parts, ours included.
+
+Building it locally (Qt 6.11.2 for WebAssembly needs Emscripten 4.0.7):
+
+```sh
+aqt install-qt all_os wasm 6.11.2 wasm_singlethread -O ~/qt     # pip install aqtinstall
+source ~/emsdk/emsdk_env.sh                                      # emsdk install/activate 4.0.7
+mkdir -p build-wasm/boost-include && ln -s "$(brew --prefix)/include/boost" build-wasm/boost-include/
+~/qt/6.11.2/wasm_singlethread/bin/qt-cmake -S . -B build-wasm -DQT_HOST_PATH=$(brew --prefix qt) \
+  -DFR_BOOST_INCLUDE=$PWD/build-wasm/boost-include
+cmake --build build-wasm
+scripts/build-site.py && (cd site && python3 -m http.server)
+```
+
+`.github/workflows/pages.yml` builds and publishes it on every push to `main`.
 
 ## How it works
 

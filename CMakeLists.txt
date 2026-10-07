@@ -18,7 +18,14 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Xml)
 # private modules into their own packages; before that Qt6::CorePrivate
 # comes with Core.
 find_package(Qt6 QUIET COMPONENTS CorePrivate)
-find_package(Boost REQUIRED)
+if(EMSCRIPTEN)
+  # Boost is used for headers only; point at a folder holding just boost/,
+  # so the host's other system headers stay out of the WebAssembly build.
+  set(FR_BOOST_INCLUDE "" CACHE PATH "a folder with boost/ in it (headers only)")
+  set(Boost_INCLUDE_DIRS "${FR_BOOST_INCLUDE}")
+else()
+  find_package(Boost REQUIRED)
+endif()
 
 set(FZ "${FRITZING_APP}/src")
 
@@ -67,11 +74,43 @@ target_link_libraries(frcore PUBLIC
   Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Svg Qt6::Xml Qt6::CorePrivate
 )
 
-target_compile_definitions(frcore PUBLIC
-  FR_VENDOR_DIR="${CMAKE_SOURCE_DIR}/vendor"
-  FR_PARTS_DIR="${CMAKE_SOURCE_DIR}/libraries/fritzing-parts-extra"
-  FR_FRITZING_APP="${FRITZING_APP}"
-)
+# Where the parts and Fritzing's resources are at run time: in the source
+# tree, or in the web build's virtual file system.
+if(EMSCRIPTEN)
+  target_compile_definitions(frcore PUBLIC
+    FR_VENDOR_DIR="/parts"
+    FR_PARTS_DIR="/parts/fritzing-parts-extra"
+    FR_FRITZING_APP="/fritzing-app"
+  )
+else()
+  target_compile_definitions(frcore PUBLIC
+    FR_VENDOR_DIR="${CMAKE_SOURCE_DIR}/vendor"
+    FR_PARTS_DIR="${CMAKE_SOURCE_DIR}/libraries/fritzing-parts-extra"
+    FR_FRITZING_APP="${FRITZING_APP}"
+  )
+endif()
+
+if(EMSCRIPTEN)
+  # The web build: a module the page calls (src/wasm.cpp), with Fritzing's
+  # resources preloaded; parts are fetched by the page as sketches need them.
+  set(STAGE "${CMAKE_BINARY_DIR}/preload")
+  file(REMOVE_RECURSE "${STAGE}")
+  foreach(item ratsnestcolors.xml properties.xml templates parts fonts)
+    file(COPY "${FRITZING_APP}/resources/${item}" DESTINATION "${STAGE}/fritzing-app/resources")
+  endforeach()
+  # Fritzing's ground symbol draws from the parts library's svg folder.
+  file(COPY "${CMAKE_SOURCE_DIR}/vendor/fritzing-parts/svg/core/schematic/ground.svg"
+       DESTINATION "${STAGE}/parts/fritzing-parts/svg/core/schematic")
+  qt_add_executable(fritzing-render-web src/wasm.cpp)
+  target_link_libraries(fritzing-render-web PRIVATE frcore)
+  target_link_options(fritzing-render-web PRIVATE
+    -lembind
+    -sALLOW_MEMORY_GROWTH=1
+    -sEXPORTED_RUNTIME_METHODS=FS
+    "--preload-file=${STAGE}@/"
+  )
+  return()
+endif()
 
 add_executable(fritzing-render src/main.cpp)
 target_link_libraries(fritzing-render PRIVATE frcore)

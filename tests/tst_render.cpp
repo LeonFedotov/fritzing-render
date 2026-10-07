@@ -79,6 +79,20 @@ private Q_SLOTS:
 		QVERIFY(fzp::findConnector(p, "nope") == nullptr);
 	}
 
+	void fzpToleratesControlCharacters() {
+		// Some library parts carry stray control characters (invalid in XML) in their descriptions.
+		QTemporaryDir dir;
+		QByteArray xml = readFile(Fixtures + "/parts/core/testpart.fzp");
+		xml.replace("<title>Test Part</title>", "<title>Test Part</title><description>two\x02line</description>");
+		QFile f(dir.filePath("bad.fzp"));
+		QVERIFY(f.open(QIODevice::WriteOnly) && f.write(xml) > 0);
+		f.close();
+		const fzp::Part p = fzp::read(f.fileName());
+		QVERIFY2(p.ok, qPrintable(p.error));
+		QCOMPARE(p.title, QString("Test Part"));
+		QCOMPARE(partlib::index({dir.path()}).value(0).title, QString("Test Part"));
+	}
+
 	void fzpReportsMissingFile() {
 		const fzp::Part p = fzp::read(Fixtures + "/missing.fzp");
 		QVERIFY(!p.ok);
@@ -154,6 +168,28 @@ private Q_SLOTS:
 		// and it resolves back to the same part
 		const auto entries = partlib::index(FixtureRoots);
 		QVERIFY(partlib::resolve(FixtureRoots, entries, partlib::ref(FixtureRoots, Fixtures + "/fzpz/part.flat.fzp")).endsWith("part.flat.fzp"));
+	}
+
+	void manifestListsEachPartsFilesByRoot() {
+		const QList<partlib::Manifest> m = partlib::manifest(FixtureRoots);
+		QCOMPARE(m.size(), 7);
+		auto find = [&](const QString & moduleId) {
+			for (const auto & e : m) {
+				if (e.entry.moduleId == moduleId) return e;
+			}
+			return partlib::Manifest{};
+		};
+		const partlib::Manifest test = find("TestPartModuleID");
+		QCOMPARE(test.root, FixtureRoots[0]);
+		QCOMPARE(test.fzp, QString("core/testpart.fzp"));
+		QCOMPARE(test.breadboard, QString("svg/core/breadboard/testpart.svg"));
+		QVERIFY(test.schematic.isEmpty());
+		const partlib::Manifest schem = find("SchemPartModuleID");
+		QCOMPARE(schem.schematic, QString("svg/core/schematic/schempart.svg"));
+		const partlib::Manifest flat = find("FlatModuleID");
+		QCOMPARE(flat.root, FixtureRoots[1]);
+		QCOMPARE(flat.fzp, QString("part.flat.fzp"));
+		QCOMPARE(flat.breadboard, QString("svg.breadboard.flat.svg"));
 	}
 
 	void searchNeedsEveryWord() {
@@ -477,6 +513,18 @@ private Q_SLOTS:
 		QVERIFY(l.sketch.parts[0].part.startsWith(dir.path()));
 		const render::Result r = render::renderSketch(l.sketch, FixtureRoots, {});
 		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+	}
+
+	void fzzListsTheModulesItUses() {
+		// what a loader must fetch before rendering: every part's module id, once, wires left out
+		const QStringList ids = fzz::moduleIds(readFile(Fixtures + "/sketch.fz"));
+		QVERIFY(ids.contains("TestPartModuleID"));
+		QVERIFY(ids.contains("FixtureColorLEDModuleID"));
+		QVERIFY(ids.contains("generic_female_pin_header_3_100mil"));
+		QVERIFY(!ids.contains("WireModuleID"));
+		QCOMPARE(ids.count("TestPartModuleID"), 1);
+		QCOMPARE(fzz::moduleIds(readFile(Fixtures + "/bundled.fzz")), QStringList({"abc123_1"}));
+		QVERIFY(fzz::moduleIds("not a sketch").isEmpty());
 	}
 
 	void fzzErrors() {

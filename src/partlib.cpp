@@ -142,4 +142,18 @@ QString imagePath(const fzp::Part & part, const QString & viewName) {
 	return {};
 }
 
+QList<Manifest> manifest(const QStringList & roots) {
+	QList<Manifest> out;
+	for (const QString & root : roots) {
+		const QDir dir(root);
+		for (const Entry & e : index({root}, true)) {
+			const fzp::Part part = fzp::read(e.path);
+			if (!part.ok) continue;
+			auto rel = [&](const QString & path) { return path.isEmpty() ? QString() : dir.relativeFilePath(path); };
+			out << Manifest{root, rel(e.path), rel(imagePath(part, "breadboardView")), rel(imagePath(part, "schematicView")), e};
+		}
+	}
+	return out;
+}
+
 }  // namespace partlib

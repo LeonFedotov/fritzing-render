@@ -48,6 +48,13 @@ QList<Connector> readConnectors(const QDomElement & root) {
 
 }  // namespace
 
+// The bytes less the control characters XML forbids (all below 0x20 but
+// tab, newline and return), which some library parts carry in their text.
+QByteArray withoutControlCharacters(QByteArray bytes) {
+	bytes.removeIf([](char c) { return static_cast<unsigned char>(c) < 0x20 && c != '\t' && c != '\n' && c != '\r'; });
+	return bytes;
+}
+
 Part read(const QString & path) {
 	Part part;
 	part.path = path;
@@ -57,7 +64,7 @@ Part read(const QString & path) {
 		return part;
 	}
 	QDomDocument doc;
-	const QDomDocument::ParseResult parsed = doc.setContent(&file);
+	const QDomDocument::ParseResult parsed = doc.setContent(withoutControlCharacters(file.readAll()));
 	if (!parsed) {
 		part.error = QString("%1: %2 (line %3)").arg(path, parsed.errorMessage).arg(parsed.errorLine);
 		return part;

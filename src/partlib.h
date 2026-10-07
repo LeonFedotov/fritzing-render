@@ -43,4 +43,18 @@ QString ref(const QStringList & roots, const QString & path);
 // The SVG file for one view of a part (e.g. "breadboardView"), or empty.
 QString imagePath(const fzp::Part & part, const QString & viewName);
 
+// A part's files as a renderer needs them: its .fzp and its breadboard and
+// schematic drawings (empty if it has none), relative to its library root.
+// For loading parts piecemeal, as the web build does.
+struct Manifest {
+	QString root;
+	QString fzp;
+	QString breadboard;
+	QString schematic;
+	Entry entry;
+};
+
+// Every part under the roots, obsolete ones included.
+QList<Manifest> manifest(const QStringList & roots);
+
 }  // namespace partlib

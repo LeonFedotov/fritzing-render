@@ -33,4 +33,8 @@ struct Loaded {
 Loaded load(const QByteArray & data, const QStringList & roots, const QString & workDir,
             const QString & view = sketch::BreadboardView);
 
+// The module ids an .fzz or .fz uses, each once, wires left out: the parts
+// a loader must have before rendering it. Empty for anything else.
+QStringList moduleIds(const QByteArray & data);
+
 }  // namespace fzz

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fritzing-render</title>
+  <meta name="description" content="Fritzing breadboard diagrams and schematics rendered in your browser, with Fritzing's own SVG code compiled to WebAssembly.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 22V10h10M8 16h8M18 22l6-12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>fritzing-render</h1>
+      <p class="lede">Fritzing breadboard diagrams and schematics, drawn in your browser by Fritzing's own SVG code compiled to WebAssembly.
+        Parts come from Fritzing's library, Adafruit, SparkFun, Seeed and more, fetched from GitHub as a sketch needs them.</p>
+      <p class="links"><a href="https://github.com/LeonFedotov/fritzing-render">GitHub</a> ·
+        <a href="https://github.com/LeonFedotov/fritzing-render#docker">Docker &amp; MCP server</a> ·
+        <a href="https://github.com/LeonFedotov/fritzing-parts-extra">fritzing-parts-extra</a></p>
+      <p id="status" class="status">Loading the renderer…</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="yours">
+      <h2>Your sketch</h2>
+      <label id="drop" class="drop">
+        <input id="file" type="file" accept=".fzz,.fz,.json" hidden>
+        <strong>Drop a Fritzing <code>.fzz</code></strong> (or a <code>.fz</code>, or a JSON sketch) here, or click to choose one.
+        <span class="hint">It stays in your browser. Parts from the libraries it uses are fetched by module id, so the file doesn't have to bundle them.</span>
+      </label>
+      <div id="yours-out"></div>
+    </section>
+
+    <section>
+      <h2>Examples</h2>
+      <p class="hint">Rendered live as they scroll into view. Fritzing's own example sketches come from the fritzing-app repository.</p>
+      <div id="gallery" class="gallery"></div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>GPL-3.0-or-later; part drawings are under their libraries' own terms. Renderer built with Qt for WebAssembly.</p>
+  </footer>
+
+  <div id="qt" hidden></div>
+  <script src="fritzing-render-web.js"></script>
+  <script src="qtloader.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

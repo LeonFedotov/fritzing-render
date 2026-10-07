@@ -4,3 +4,6 @@ out/
 .DS_Store
 out-*
 mcp/node_modules/
+.wasm-toolchain/
+build-wasm/
+site/

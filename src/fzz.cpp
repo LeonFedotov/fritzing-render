@@ -326,6 +326,30 @@ Format detect(const QByteArray & data) {
 	return Format::Json;
 }
 
+QStringList moduleIds(const QByteArray & data) {
+	QByteArray fz;
+	if (detect(data) == Format::Fzz) {
+		QBuffer buffer;
+		buffer.setData(data);
+		buffer.open(QIODevice::ReadOnly);
+		QZipReader reader(&buffer);
+		for (const QZipReader::FileInfo & info : reader.fileInfoList()) {
+			if (info.isFile && info.filePath.endsWith(".fz")) fz = reader.fileData(info.filePath);
+		}
+	} else if (detect(data) == Format::Fz) {
+		fz = data;
+	}
+	QDomDocument doc;
+	if (fz.isEmpty() || !doc.setContent(fz)) return {};
+	QStringList ids;
+	const QDomElement instances = doc.documentElement().firstChildElement("instances");
+	for (QDomElement inst = instances.firstChildElement("instance"); !inst.isNull(); inst = inst.nextSiblingElement("instance")) {
+		const QString id = inst.attribute("moduleIdRef");
+		if (id != "WireModuleID" && !id.isEmpty() && !ids.contains(id)) ids << id;
+	}
+	return ids;
+}
+
 Loaded load(const QByteArray & data, const QStringList & roots, const QString & workDir, const QString & view) {
 	QStringList all = roots;
 	QByteArray fz = data;

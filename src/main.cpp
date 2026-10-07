@@ -4,6 +4,7 @@
 //                          [--view breadboard|schematic] [--theme fritzing|modern]
 //   fritzing-render search <words...> [--limit 20] [--json]
 //   fritzing-render part <fzp path | moduleId | title> [--json]
+//   fritzing-render index                  every part's files, as JSON (for the web build)
 //
 // Library roots: FRITZING_PARTS (colon-separated), else the build's vendor/.
 
@@ -42,7 +43,8 @@ int usage() {
 	         "                         [--view breadboard|schematic]   (schematic: .fzz/.fz only)\n"
 	         "                         [--theme fritzing|modern]       (the schematic's look)\n"
 	         "  fritzing-render search <words...> [--limit 20] [--json]\n"
-	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n";
+	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n"
+	         "  fritzing-render index\n";
 	return 2;
 }
 
@@ -126,6 +128,19 @@ int cmdPart(QStringList args) {
 		             .arg(c.local.y(), 0, 'f', 1)
 		             .arg(c.found ? "" : "  [no breadboard geometry]");
 	}
+	return 0;
+}
+
+// Every part in the libraries with the files a renderer needs, for loading
+// parts piecemeal (the web build's parts index).
+int cmdIndex() {
+	QJsonArray parts;
+	for (const partlib::Manifest & m : partlib::manifest(partlib::defaultRoots())) {
+		parts << QJsonObject{{"root", m.root}, {"fzp", m.fzp}, {"breadboard", m.breadboard}, {"schematic", m.schematic},
+		                     {"moduleId", m.entry.moduleId}, {"title", m.entry.title}, {"family", m.entry.family},
+		                     {"tags", QJsonArray::fromStringList(m.entry.tags)}};
+	}
+	out() << QJsonDocument(parts).toJson(QJsonDocument::Compact);
 	return 0;
 }
 
@@ -214,5 +229,6 @@ int main(int argc, char * argv[]) {
 	if (cmd == "render") return cmdRender(args);
 	if (cmd == "search") return cmdSearch(args);
 	if (cmd == "part") return cmdPart(args);
+	if (cmd == "index") return cmdIndex();
 	return usage();
 }
