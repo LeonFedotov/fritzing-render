@@ -122,13 +122,26 @@ docker run --rm -v "$PWD:/work" ghcr.io/leonfedotov/fritzing-render render blink
 ## In the browser
 
 **[leonfedotov.github.io/fritzing-render](https://leonfedotov.github.io/fritzing-render/)**
-renders the examples live and any `.fzz`, `.fz` or JSON sketch you drop on
-it, in both views and both themes, with SVG and PNG downloads. Drop parts on
-it too (`.fzpz`, or a `.fzp` with its `.svg` drawings): they're kept in your
-browser and any sketch can use them. A parts catalogue searches every part
-of every library (title, module id, family, tags, file name) and draws
-previews only for the results on screen, with the line to paste into a
-sketch. The renderer
+has three pages:
+
+- **Sketches**: the examples, rendered live, and any `.fzz`, `.fz` or JSON
+  sketch you drop on it, in both views and both themes, with SVG and PNG
+  downloads. A JSON sketch, or an `.fz` saved without schematic positions,
+  gets the laid-out schematic described below.
+- **Parts**: a catalogue that searches every part of every library (title,
+  module id, family, tags, file name) and draws previews only for the
+  results on screen. Each part has its own page with its breadboard and
+  schematic views, its files (part file, breadboard, schematic, PCB and icon
+  drawings) to view and download, or all of them as a `.fzpz`, its
+  connectors, and its properties. Parts you drop (`.fzpz`, or a `.fzp` with
+  its `.svg` drawings) are kept in your browser, and any sketch can use them.
+- **Editor**: a new JSON sketch, or an example opened from its card. Find
+  parts on the left and click to add them; drag parts to move them, and drag
+  from one pin to another to wire them. You can choose wire colours, rotate,
+  rename, label, undo, download the JSON, and render the result in either
+  view. The sketch is kept in your browser between visits.
+
+The renderer
 is compiled to WebAssembly with Qt for WebAssembly (`src/wasm.cpp`); the page
 (`web/`) loads a parts index of every library here (`fritzing-render index`,
 mapped to each library's GitHub repository at the commit this checkout pins)
@@ -188,8 +201,25 @@ traces (one line each, no shadow) and the part labels Fritzing shows
 Fritzing draws where three traces meet or two leave one pin. Net labels
 and power labels are drawn as Fritzing's `NetLabel` and
 `SymbolPaletteItem` draw them, with their text, and ground and power symbols
-come from Fritzing's own resources. JSON sketches have breadboard
-positions only, so they have no schematic yet ([#1](https://github.com/LeonFedotov/fritzing-render/issues/1)).
+come from Fritzing's own resources.
+
+A JSON sketch has breadboard positions only, so its schematic is laid out
+for it (`schematic.cpp`): each part's schematic symbol in rows, in the
+sketch's order, on the 0.1 in grid, and every wired pin given a net label,
+so pins on one net carry one name. Nothing is routed. Nets follow the wires
+and the buses inside parts (a breadboard's strips, a board's GND pins),
+through parts with no schematic symbol, such as breadboards, which aren't
+drawn. A net is named GND if any of its pins is a ground, else by the name
+most of its pins share (SDA), a power pin's name (3V3, VIN), or the
+microcontroller's pin name (D14); an LED and its resistor's net is named
+after the part (`led_red_anode`). Labels on pins closer than 0.1 in shrink
+to fit.
+
+```sh
+build/fritzing-render render examples/esp32-air-station.json --view schematic --theme modern --png station-schematic.png
+```
+
+![The ESP32 air station's schematic, laid out from its JSON sketch](examples/esp32-air-station-schematic.png)
 
 `--theme modern` restyles a schematic while keeping Fritzing's symbols:
 component bodies filled and outlined heavier with rounded corners, every
@@ -282,8 +312,9 @@ looked up in `FRITZING_PARTS` (colon-separated library roots) if set, else in
 `mcp/` wraps the CLI as an MCP server with four tools: `search_parts`,
 `describe_part`, `render_diagram`, which renders a diagram given as parts
 and wires, and `render_fritzing_sketch`, which renders a sketch file (`.fzz`,
-`.fz` or JSON) by path, in the breadboard or (for `.fzz`/`.fz`) schematic view,
-in Fritzing's look or the modern `theme`. Images are 300 ppi unless `ppi` is given. The two render tools return the PNG as an image, with
+`.fz` or JSON) by path. Both take a `view` (breadboard or schematic; a JSON
+sketch's schematic is laid out from its wiring) and, for schematics,
+Fritzing's look or the modern `theme`. Images are 300 ppi unless `ppi` is given. The two render tools return the PNG as an image, with
 any warnings, and can save the SVG and PNG.
 
 ```sh

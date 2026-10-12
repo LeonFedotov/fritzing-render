@@ -101,6 +101,9 @@ server.registerTool(
   },
 )
 
+const themeOption = z.enum(['fritzing', 'modern']).default('fritzing')
+  .describe('schematic look: Fritzing\'s own, or "modern" (filled bodies, heavier lines, one wire color, net-label tags, a dot grid)')
+
 const point = z.tuple([z.number(), z.number()])
 const wireEnd = z
   .union([z.string(), z.object({ part: z.string(), at: point }), point])
@@ -109,7 +112,7 @@ const wireEnd = z
 server.registerTool(
   'render_diagram',
   {
-    title: 'Render a breadboard diagram',
+    title: 'Render a breadboard diagram or its schematic',
     description:
       'Render Fritzing breadboard-view parts and wires to an image (returned as PNG), optionally saving the SVG and PNG. ' +
       'Coordinates are Fritzing scene units, 90 per inch (header pins are 9 apart), y down; x/y place a part\'s top-left corner ' +
@@ -142,12 +145,15 @@ server.registerTool(
         }))
         .default([]),
       margin: z.number().min(0).default(18),
+      view: z.enum(['breadboard', 'schematic']).default('breadboard')
+        .describe('schematic: each part\'s schematic symbol, laid out in rows, every wired pin given a net label named after its net (x/y/rotate apply to the breadboard only)'),
+      theme: themeOption,
       ...imageOptions,
     },
   },
-  async ({ parts, wires, margin, ppi, transparent, save_svg, save_png }) => {
+  async ({ parts, wires, margin, view, theme, ppi, transparent, save_svg, save_png }) => {
     try {
-      const out = await renderDiagram(bin, { parts, wires, margin }, { ppi, transparent })
+      const out = await renderDiagram(bin, { parts, wires, margin }, { ppi, transparent, view, theme })
       const saved = await save(out, save_svg, save_png)
       return imageResult(out, renderSummary(`${parts.length} parts and ${wires.length} wires`, out, saved))
     } catch (error) {
@@ -163,13 +169,12 @@ server.registerTool(
     description:
       'Render the breadboard or schematic view of a Fritzing sketch file (.fzz, as saved by the Fritzing app, or a bare .fz) to an image ' +
       '(returned as PNG), optionally saving the SVG and PNG. Parts bundled in the .fzz are used, and parts Fritzing generates (pin headers, ' +
-      'net labels, power and ground symbols) are made as it does. Also takes a JSON sketch file in render_diagram\'s format (breadboard only). ' +
+      'net labels, power and ground symbols) are made as it does. Also takes a JSON sketch file in render_diagram\'s format. ' +
       'Notes and parts no library has are left out, and listed as warnings.',
     inputSchema: {
       path: z.string().min(1).describe('the sketch file; a relative path is taken from the server\'s working directory'),
       view: z.enum(['breadboard', 'schematic']).default('breadboard'),
-      theme: z.enum(['fritzing', 'modern']).default('fritzing')
-        .describe('schematic look: Fritzing\'s own, or "modern" (filled bodies, heavier lines, one wire color, net-label tags, a dot grid)'),
+      theme: themeOption,
       ...imageOptions,
     },
   },

@@ -134,3 +134,15 @@ test('renders the schematic view of a .fz', { skip: !existsSync(bin) && 'build f
     else process.env.FRITZING_PARTS = saved
   }
 })
+
+test('lays out the schematic of a JSON sketch', { skip: !haveBinary && 'build and fetch-vendor first' }, async () => {
+  const out = await renderDiagram(bin, {
+    parts: [
+      { id: 'mcu', part: 'core/Arduino Nano3(fix).fzp', x: 0, y: 0 },
+      { id: 'r1', part: 'core/resistor.fzp', x: 120, y: 40 },
+    ],
+    wires: [{ from: 'mcu.D2', to: 'r1.connector0' }, { from: 'r1.connector1', to: 'mcu.GND' }],
+  }, { ppi: 60, view: 'schematic' })
+  assert.equal(out.svg.match(/id='net:D2:/g)?.length, 2)  // a label on each end
+  assert.ok((out.svg.match(/id='net:GND:/g)?.length ?? 0) >= 2)
+})

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A sketch without schematic positions or saved connections: R2's A pin
+     touches R1's B pin, and a wire runs from R1's A pin to R2's B pin. -->
+<module fritzingVersion="1.0.8">
+  <instances>
+    <instance moduleIdRef="SchemPartModuleID" modelIndex="1">
+      <title>R1</title>
+      <views><breadboardView layer="breadboard"><geometry z="1" x="0" y="0"/></breadboardView></views>
+    </instance>
+    <instance moduleIdRef="SchemPartModuleID" modelIndex="2">
+      <title>R2</title>
+      <views><breadboardView layer="breadboard"><geometry z="1" x="27" y="3.375"/></breadboardView></views>
+    </instance>
+    <instance moduleIdRef="WireModuleID" modelIndex="3">
+      <title>Wire1</title>
+      <views><breadboardView layer="breadboardWire"><geometry z="2" x="4.5" y="14.4" x1="0" y1="0" x2="54" y2="6.75" wireFlags="64"/></breadboardView></views>
+    </instance>
+  </instances>
+</module>

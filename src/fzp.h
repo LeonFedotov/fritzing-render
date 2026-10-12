@@ -37,6 +37,7 @@ struct Part {
 	QStringList tags;
 	QHash<QString, View> views;
 	QList<Connector> connectors;
+	QList<QStringList> buses;  // connector ids joined inside the part (a breadboard's strips, a board's GND pins)
 	bool ok = false;
 	QString error;
 };

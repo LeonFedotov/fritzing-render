@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- 0.4 x 0.4 in: a pin 0.1 in long on each side, terminals at the outer ends -->
+<svg xmlns='http://www.w3.org/2000/svg' width='0.4in' height='0.4in' viewBox='0 0 400 400'>
+ <g id='schematic'>
+  <rect x='100' y='100' width='200' height='200' fill='none' stroke='#000000' stroke-width='10'/>
+  <line id='connector0pin' x1='0' y1='200' x2='100' y2='200' stroke='#000000' stroke-width='10'/>
+  <rect id='connector0terminal' x='0' y='195' width='1' height='10' fill='none'/>
+  <line id='connector1pin' x1='300' y1='200' x2='400' y2='200' stroke='#000000' stroke-width='10'/>
+  <rect id='connector1terminal' x='399' y='195' width='1' height='10' fill='none'/>
+  <line id='connector2pin' x1='200' y1='0' x2='200' y2='100' stroke='#000000' stroke-width='10'/>
+  <rect id='connector2terminal' x='195' y='0' width='10' height='1' fill='none'/>
+  <line id='connector3pin' x1='200' y1='300' x2='200' y2='400' stroke='#000000' stroke-width='10'/>
+  <rect id='connector3terminal' x='195' y='399' width='10' height='1' fill='none'/>
+ </g>
+</svg>

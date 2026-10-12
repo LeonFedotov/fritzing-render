@@ -60,6 +60,7 @@ add_library(frcore STATIC
   src/fzz.cpp
   src/generated.cpp
   src/render.cpp
+  src/schematic.cpp
 )
 
 target_include_directories(frcore PUBLIC

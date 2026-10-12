@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parts catalogue</title>
+  <meta name="description" content="Fritzing breadboard diagrams and schematics rendered in your browser, with Fritzing's own SVG code compiled to WebAssembly.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 22V10h10M8 16h8M18 22l6-12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap bar">
+      <a class="brand" href="./">fritzing-render</a>
+      <nav>
+        <a href="./">Sketches</a>
+        <a href="parts.html" aria-current="page">Parts</a>
+        <a href="editor.html">Editor</a>
+        <a href="https://github.com/LeonFedotov/fritzing-render">GitHub</a>
+      </nav>
+      <p id="status" class="status">Loading the renderer…</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="catalogue">
+      <h1>Parts catalogue</h1>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search every part: try “esp32 s3”, “74ls”, “grove”, “oled 128x64”…" autocomplete="off" spellcheck="false" autofocus>
+        <span id="count" class="hint"></span>
+      </div>
+      <p class="hint">Searches titles, module ids, families, tags and file names across all libraries. Only the results on screen are fetched and drawn. Open a part for its views, connectors, properties and files.</p>
+      <div id="results" class="parts"></div>
+      <button id="more" class="more" hidden>Show more</button>
+    </section>
+
+    <section id="yours">
+      <h2>Your parts</h2>
+      <label id="drop" class="drop">
+        <input id="file" type="file" accept=".fzpz,.fzp,.svg" multiple hidden>
+        <strong>Drop parts</strong>: a <code>.fzpz</code>, or a <code>.fzp</code> with its <code>.svg</code> drawings. Or click to choose files.
+        <span class="hint">Kept in this browser for next time. Sketches, examples and the editor use them by module id, title or path, ahead of a library's copy.</span>
+      </label>
+      <p id="drop-note" class="note"></p>
+      <p id="user-parts-empty" class="hint">None yet.</p>
+      <div id="user-parts" class="parts"></div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>GPL-3.0-or-later; part drawings are under their libraries' own terms. Renderer built with Qt for WebAssembly.</p>
+  </footer>
+
+  <div id="qt" hidden></div>
+  <script src="fritzing-render-web.js"></script>
+  <script src="qtloader.js"></script>
+  <script type="module" src="parts.js"></script>
+</body>
+</html>

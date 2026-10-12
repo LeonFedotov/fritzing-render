@@ -13,6 +13,7 @@
 #include <QSizeF>
 #include <QString>
 #include <QStringList>
+#include <QTransform>
 
 #include "fzp.h"
 #include "partlib.h"
@@ -55,9 +56,17 @@ LoadedPart loadPart(const QString & fzpPath, const QString & view = sketch::Brea
 // for parts the libraries don't have; drawn like Fritzing's mystery part.
 LoadedPart genericPart(const sketch::Generic & generic);
 
+// Where a placed part's connectors are in the scene, by connector id: their
+// terminals, or the ends of their legs (bent as the spec has them).
+QHash<QString, QPointF> sceneConnectors(const sketch::PartSpec & spec, const LoadedPart & lp);
+
+// A placed part's coordinates -> the scene.
+QTransform partToScene(const sketch::PartSpec & spec, const LoadedPart & lp);
+
 struct Result {
 	QString svg;
 	QSizeF size;            // scene units
+	QPointF origin;         // the scene point at the drawing's top-left corner
 	QStringList warnings;
 	QString error;          // empty on success
 };

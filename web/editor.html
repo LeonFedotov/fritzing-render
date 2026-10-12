@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sketch editor</title>
+  <meta name="description" content="Fritzing breadboard diagrams and schematics rendered in your browser, with Fritzing's own SVG code compiled to WebAssembly.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 22V10h10M8 16h8M18 22l6-12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="app">
+  <header class="top">
+    <div class="wrap bar">
+      <a class="brand" href="./">fritzing-render</a>
+      <nav>
+        <a href="./">Sketches</a>
+        <a href="parts.html">Parts</a>
+        <a href="editor.html" aria-current="page">Editor</a>
+        <a href="https://github.com/LeonFedotov/fritzing-render">GitHub</a>
+      </nav>
+      <p id="status" class="status">Loading the renderer…</p>
+    </div>
+  </header>
+
+  <main class="editor">
+    <aside class="side">
+      <div class="search"><input id="q" type="search" placeholder="Find a part to add…" autocomplete="off" spellcheck="false"></div>
+      <ul id="results" class="picks"></ul>
+      <p class="hint" id="pick-hint">Search, then click a part to add it. Drag parts to move them; drag from a pin to another pin to wire them.</p>
+    </aside>
+    <section class="board">
+      <div class="toolbar">
+        <button id="new" class="button ghost">New</button>
+        <label class="button ghost">Open…<input id="open" type="file" accept=".json" hidden></label>
+        <button id="save" class="button ghost">Download JSON</button>
+        <span class="sep"></span>
+        <span class="hint">Wire</span>
+        <div id="colors" class="swatches"></div>
+        <span class="sep"></span>
+        <button id="rotate" class="button ghost" disabled title="Rotate the selected part (R)">Rotate</button>
+        <button id="delete" class="button ghost" disabled title="Delete the selection (Delete)">Delete</button>
+        <button id="undo" class="button ghost" disabled title="Undo (Ctrl+Z)">Undo</button>
+        <span class="spacer"></span>
+        <button id="fit" class="button ghost" title="Fit the sketch in view">Fit</button>
+        <button id="render" class="button">Render</button>
+      </div>
+      <div class="canvas-wrap">
+        <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="inspector" class="inspector" hidden></div>
+        <p id="empty" class="empty">A new sketch. Find a part on the left to begin, or open one of the <a href="./">examples</a>.</p>
+      </div>
+      <div id="out"></div>
+    </section>
+  </main>
+
+  <div id="qt" hidden></div>
+  <script src="fritzing-render-web.js"></script>
+  <script src="qtloader.js"></script>
+  <script type="module" src="editor.js"></script>
+</body>
+</html>

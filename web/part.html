@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part</title>
+  <meta name="description" content="Fritzing breadboard diagrams and schematics rendered in your browser, with Fritzing's own SVG code compiled to WebAssembly.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M8 22V10h10M8 16h8M18 22l6-12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap bar">
+      <a class="brand" href="./">fritzing-render</a>
+      <nav>
+        <a href="./">Sketches</a>
+        <a href="parts.html" aria-current="page">Parts</a>
+        <a href="editor.html">Editor</a>
+        <a href="https://github.com/LeonFedotov/fritzing-render">GitHub</a>
+      </nav>
+      <p id="status" class="status">Loading the renderer…</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="crumbs"><a href="parts.html">Parts</a> / <span id="crumb">…</span></p>
+    <article id="part" class="detail">
+      <header>
+        <h1 id="title">Loading…</h1>
+        <p id="sub" class="hint"></p>
+        <p id="desc" class="lede"></p>
+        <div class="actions">
+          <a id="add" class="button">Add to editor</a>
+          <button id="copy" class="button ghost">Copy for a JSON sketch</button>
+          <button id="fzpz" class="button ghost">Download .fzpz</button>
+        </div>
+      </header>
+      <section>
+        <h2>Views</h2>
+        <div class="views">
+          <figure class="view-card"><figcaption>Breadboard</figcaption><div id="bb" class="stage"><p class="pending">Rendering…</p></div></figure>
+          <figure class="view-card"><figcaption>Schematic <span class="seg theme"><button data-theme="fritzing" class="on">Fritzing</button><button data-theme="modern">Modern</button></span></figcaption><div id="sch" class="stage"><p class="pending">Rendering…</p></div></figure>
+        </div>
+      </section>
+      <section>
+        <h2>Files</h2>
+        <p class="hint" id="files-note"></p>
+        <div id="files" class="files"></div>
+      </section>
+      <section class="two">
+        <div>
+          <h2>Connectors <span id="ncon" class="hint"></span></h2>
+          <div class="table-wrap"><table id="connectors"><thead><tr><th>Name</th><th>Id</th><th>Description</th><th>Breadboard (x, y)</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div>
+          <h2>Properties</h2>
+          <table id="props"><tbody></tbody></table>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <footer class="wrap">
+    <p>GPL-3.0-or-later; part drawings are under their libraries' own terms. Renderer built with Qt for WebAssembly.</p>
+  </footer>
+
+  <div id="qt" hidden></div>
+  <script src="fritzing-render-web.js"></script>
+  <script src="qtloader.js"></script>
+  <script type="module" src="part.js"></script>
+</body>
+</html>

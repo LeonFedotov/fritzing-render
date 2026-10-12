@@ -23,6 +23,7 @@
 #include "fzz.h"
 #include "partlib.h"
 #include "render.h"
+#include "schematic.h"
 #include "sketch.h"
 
 namespace {
@@ -40,7 +41,7 @@ QTextStream & err() {
 int usage() {
 	err() << "usage:\n"
 	         "  fritzing-render render <sketch.json|sketch.fzz|sketch.fz|-> [-o out.svg] [--png out.png] [--ppi 300] [--transparent]\n"
-	         "                         [--view breadboard|schematic]   (schematic: .fzz/.fz only)\n"
+	         "                         [--view breadboard|schematic]   (a JSON sketch's schematic is laid out for it)\n"
 	         "                         [--theme fritzing|modern]       (the schematic's look)\n"
 	         "  fritzing-render search <words...> [--limit 20] [--json]\n"
 	         "  fritzing-render part <fzp path | moduleId | title> [--json]\n"
@@ -161,28 +162,47 @@ int cmdRender(QStringList args) {
 	const QStringList roots = partlib::defaultRoots();
 	QStringList warnings;
 	render::Result r;
+	const QTemporaryDir work;  // parts a sketch brings or Fritzing generates, written out
 	if (fzz::detect(input) == fzz::Format::Json) {
-		if (view != sketch::BreadboardView) {
-			err() << "JSON sketches have breadboard positions only; the schematic view needs an .fzz or .fz "
-			         "(see https://github.com/LeonFedotov/fritzing-render/issues/1)\n";
-			return 1;
-		}
 		const sketch::ParseResult parsed = sketch::parse(input);
 		if (!parsed.error.isEmpty()) {
 			err() << parsed.error << "\n";
 			return 1;
 		}
-		r = render::renderSketch(parsed.sketch, roots, partlib::index(roots));
+		const QList<partlib::Entry> entries = partlib::index(roots);
+		sketch::Sketch sk = parsed.sketch;
+		if (view == sketch::SchematicView) {
+			// laid out from the wiring: a JSON sketch has breadboard positions only
+			const schematic::Result s = schematic::fromBreadboard(sk, roots, entries, work.path());
+			if (!s.error.isEmpty()) {
+				err() << s.error << "\n";
+				return 1;
+			}
+			warnings = s.warnings;
+			sk = s.sketch;
+		}
+		sk.style = style;
+		r = render::renderSketch(sk, roots, entries);
 	} else {
 		// A Fritzing sketch: its parts come resolved to files, some perhaps unpacked here.
-		const QTemporaryDir work;
-		const fzz::Loaded loaded = fzz::load(input, roots, work.path(), view);
-		if (!loaded.error.isEmpty()) {
-			err() << loaded.error << "\n";
-			return 1;
+		sketch::Sketch sk;
+		if (view == sketch::SchematicView) {
+			const schematic::Result s = schematic::fromFritzing(input, roots, work.path());
+			if (!s.error.isEmpty()) {
+				err() << s.error << "\n";
+				return 1;
+			}
+			warnings = s.warnings;
+			sk = s.sketch;
+		} else {
+			const fzz::Loaded loaded = fzz::load(input, roots, work.path(), view);
+			if (!loaded.error.isEmpty()) {
+				err() << loaded.error << "\n";
+				return 1;
+			}
+			warnings = loaded.warnings;
+			sk = loaded.sketch;
 		}
-		warnings = loaded.warnings;
-		sketch::Sketch sk = loaded.sketch;
 		sk.style = style;
 		r = render::renderSketch(sk, roots, {});
 	}

@@ -14,6 +14,7 @@
 #include "generated.h"
 #include "partlib.h"
 #include "render.h"
+#include "schematic.h"
 #include "sketch.h"
 
 namespace {
@@ -109,7 +110,7 @@ private Q_SLOTS:
 
 	void resolveByPathModuleIdAndTitle() {
 		const auto entries = partlib::index(FixtureRoots);
-		QCOMPARE(entries.size(), 7);
+		QCOMPARE(entries.size(), 8);
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "core/testpart.fzp").endsWith("testpart.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "FlatModuleID").endsWith("part.flat.fzp"));
 		QVERIFY(partlib::resolve(FixtureRoots, entries, "test part").endsWith("testpart.fzp"));
@@ -172,7 +173,7 @@ private Q_SLOTS:
 
 	void manifestListsEachPartsFilesByRoot() {
 		const QList<partlib::Manifest> m = partlib::manifest(FixtureRoots);
-		QCOMPARE(m.size(), 7);
+		QCOMPARE(m.size(), 8);
 		auto find = [&](const QString & moduleId) {
 			for (const auto & e : m) {
 				if (e.entry.moduleId == moduleId) return e;
@@ -663,6 +664,133 @@ private Q_SLOTS:
 		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
 		QVERIFY(r.svg.contains(QRegularExpression("<rect[^>]*fill=\"#f1f5f9\"")));  // the Arduino's body, filled
 		QVERIFY(r.svg.contains("rx=\"25\""));                                      // with rounded corners
+	}
+
+	void fzpReadsBuses() {
+		const fzp::Part p = fzp::read(Fixtures + "/parts/core/busboard.fzp");
+		QCOMPARE(p.buses.size(), 1);
+		QCOMPARE(p.buses[0], QStringList({"connector0", "connector1"}));
+	}
+
+	// A JSON sketch's schematic: the parts with a schematic symbol laid out,
+	// each wired pin given a net label named after its net.
+	void jsonSchematicLabelsEveryWiredPin() {
+		QTemporaryDir dir;
+		const sketch::ParseResult parsed = sketch::parse(J(
+		    "{'parts': [{'id': 'u1', 'part': 'BusBoardModuleID'}, {'id': 'r1', 'part': 'SchemPartModuleID'}, {'id': 't', 'part': 'TestPartModuleID', 'x': 200}],"
+		    " 'wires': [{'from': 'u1.SIG', 'to': 'r1.A'}, {'from': 'r1.B', 'to': 'u1.connector0'}, {'from': 't.IN', 'to': 'u1.OUT'}]}"));
+		const auto entries = partlib::index(FixtureRoots);
+		const schematic::Result s = schematic::fromBreadboard(parsed.sketch, FixtureRoots, entries, dir.path());
+		QVERIFY2(s.error.isEmpty(), qPrintable(s.error));
+		QCOMPARE(s.sketch.view, sketch::SchematicView);
+		QVERIFY(partNamed(s.sketch, "u1") && partNamed(s.sketch, "r1"));
+		QVERIFY(!partNamed(s.sketch, "t"));  // no schematic symbol
+		QVERIFY2(s.warnings.join(' ').contains("t (Test Part)"), qPrintable(s.warnings.join('\n')));
+		const render::Result r = render::renderSketch(s.sketch, FixtureRoots, entries);
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QCOMPARE(r.svg.count(">SIG<"), 2);  // the board's pin names the net, over r1's A
+		QCOMPARE(r.svg.count(">GND<"), 3);  // r1.B, and both GND pins through the board's bus
+		QCOMPARE(r.svg.count(">OUT<"), 1);  // wired to a part that isn't drawn
+		QVERIFY(!r.svg.contains(">A<"));
+	}
+
+	void jsonSchematicLabelsSitOnTheirPinsPointingOut() {
+		QTemporaryDir dir;
+		const sketch::ParseResult parsed = sketch::parse(J(
+		    "{'parts': [{'id': 'u1', 'part': 'BusBoardModuleID'}, {'id': 'r1', 'part': 'SchemPartModuleID'}],"
+		    " 'wires': [{'from': 'u1.SIG', 'to': 'r1.A'}, {'from': 'u1.OUT', 'to': 'r1.B'}]}"));
+		const auto entries = partlib::index(FixtureRoots);
+		const schematic::Result s = schematic::fromBreadboard(parsed.sketch, FixtureRoots, entries, dir.path());
+		QVERIFY2(s.error.isEmpty(), qPrintable(s.error));
+		const sketch::PartSpec * u1 = partNamed(s.sketch, "u1");
+		const sketch::PartSpec * r1 = partNamed(s.sketch, "r1");
+		QVERIFY(u1->transform && r1->transform);
+		const QRectF u1Rect = u1->transform->mapRect(QRectF(0, 0, 36, 36));
+		const QRectF r1Rect = r1->transform->mapRect(QRectF(0, 0, 36, 9));
+		QVERIFY(!u1Rect.intersects(r1Rect));
+		// every label: its connector on a part's terminal, its body outside that part
+		int checked = 0;
+		for (const auto & p : s.sketch.parts) {
+			if (!p.id.startsWith("net:")) continue;
+			const render::LoadedPart label = render::loadPart(p.part, sketch::SchematicView);
+			const QRectF body = p.transform->mapRect(QRectF(QPointF(0, 0), label.size));
+			const QPointF tip = p.transform->map(label.connectors[0].local);
+			const QPointF sig = u1->transform->map(QPointF(18, 0.05));  // top
+			const QPointF out = u1->transform->map(QPointF(18, 35.95));  // bottom
+			const QPointF a = r1->transform->map(QPointF(0.05, 4.5));     // left
+			const QPointF b = r1->transform->map(QPointF(35.95, 4.5));    // right
+			auto near = [&](QPointF q) { return QLineF(tip, q).length() < 0.6; };
+			if (near(sig)) QVERIFY(body.bottom() <= tip.y() + 5 && body.top() < tip.y() - 12);
+			else if (near(out)) QVERIFY(body.top() >= tip.y() - 5 && body.bottom() > tip.y() + 12);
+			else if (near(a)) QVERIFY(body.right() <= tip.x() + 0.6 && body.left() < tip.x() - 12);
+			else if (near(b)) QVERIFY(body.left() >= tip.x() - 0.6 && body.right() > tip.x() + 12);
+			else QFAIL(qPrintable(QString("label %1 is not on a pin: (%2, %3)").arg(p.id).arg(tip.x()).arg(tip.y())));
+			checked++;
+		}
+		QCOMPARE(checked, 4);
+	}
+
+	void jsonSchematicWithoutWiresHasNoLabels() {
+		QTemporaryDir dir;
+		const sketch::ParseResult parsed = sketch::parse(J("{'parts': [{'id': 'r1', 'part': 'SchemPartModuleID', 'label': 'R1'}]}"));
+		const schematic::Result s = schematic::fromBreadboard(parsed.sketch, FixtureRoots, partlib::index(FixtureRoots), dir.path());
+		QVERIFY2(s.error.isEmpty(), qPrintable(s.error));
+		QCOMPARE(s.sketch.parts.size(), 1);
+		QCOMPARE(s.sketch.parts[0].label, QString("R1"));
+		QVERIFY(s.sketch.parts[0].labelAt.has_value());
+		// a part alone, unlabelled, stays so; among others it gets its title
+		const auto entries = partlib::index(FixtureRoots);
+		const auto alone = schematic::fromBreadboard(sketch::parse(J("{'parts': [{'id': 'r1', 'part': 'SchemPartModuleID'}]}")).sketch, FixtureRoots, entries, dir.path());
+		QVERIFY(alone.sketch.parts[0].label.isEmpty());
+		const auto two = schematic::fromBreadboard(sketch::parse(J("{'parts': [{'id': 'r1', 'part': 'SchemPartModuleID'}, {'id': 'r2', 'part': 'SchemPartModuleID', 'x': 100}]}")).sketch, FixtureRoots, entries, dir.path());
+		QCOMPARE(two.sketch.parts[0].label, QString("Schematic Fixture"));
+	}
+
+	void jsonSchematicErrors() {
+		QTemporaryDir dir;
+		const auto entries = partlib::index(FixtureRoots);
+		auto error = [&](const char * json) {
+			return schematic::fromBreadboard(sketch::parse(J(json)).sketch, FixtureRoots, entries, dir.path()).error;
+		};
+		QVERIFY(error("{'parts': [{'id': 'a', 'part': 'Nope'}]}").contains("no part matches"));
+		QVERIFY(error("{'parts': [{'id': 'a', 'part': 'SchemPartModuleID'}], 'wires': [{'from': 'a.Z', 'to': 'a.A'}]}").contains("has no connector \"Z\""));
+		QVERIFY(error("{'parts': [{'id': 't', 'part': 'TestPartModuleID'}]}").contains("no parts with a schematic"));
+	}
+
+	// Pins that touch on the breadboard are connected: a part's pin on another's,
+	// a wire's loose end on a pin.
+	void jsonSchematicJoinsPinsThatTouch() {
+		QTemporaryDir dir;
+		const sketch::ParseResult parsed = sketch::parse(J(
+		    "{'parts': [{'id': 'r1', 'part': 'SchemPartModuleID'}, {'id': 'r2', 'part': 'SchemPartModuleID', 'x': 27, 'y': 3.375}],"
+		    " 'wires': [{'from': [4.5, 14.4], 'to': 'r2.B'}]}"));
+		const auto entries = partlib::index(FixtureRoots);
+		const schematic::Result s = schematic::fromBreadboard(parsed.sketch, FixtureRoots, entries, dir.path());
+		QVERIFY2(s.error.isEmpty(), qPrintable(s.error));
+		const render::Result r = render::renderSketch(s.sketch, FixtureRoots, entries);
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QCOMPARE(r.svg.count(">r1_B<"), 2);  // r1.B on r2.A: two-pin parts, so named for r1
+		QCOMPARE(r.svg.count(">r1_A<"), 2);  // the wire's loose end on r1.A, to r2.B
+	}
+
+	void fritzingSketchWithoutSchematicIsLaidOut() {
+		QTemporaryDir dir;
+		const schematic::Result s = schematic::fromFritzing(readFile(Fixtures + "/handwritten.fz"), FixtureRoots, dir.path());
+		QVERIFY2(s.error.isEmpty(), qPrintable(s.error));
+		QCOMPARE(s.sketch.view, sketch::SchematicView);
+		QVERIFY(s.warnings.join(' ').contains("laid out from its breadboard"));
+		const render::Result r = render::renderSketch(s.sketch, FixtureRoots, {});
+		QVERIFY2(r.error.isEmpty(), qPrintable(r.error));
+		QCOMPARE(r.svg.count(">R1_B<"), 2);
+		QCOMPARE(r.svg.count(">R1_A<"), 2);
+	}
+
+	void fritzingSketchWithASchematicKeepsIt() {
+		QTemporaryDir dir;
+		const schematic::Result s = schematic::fromFritzing(readFile(Fixtures + "/schematic.fz"), FixtureRoots, dir.path());
+		QVERIFY2(s.error.isEmpty(), qPrintable(s.error));
+		QCOMPARE(partNamed(s.sketch, "R1")->transform->map(QPointF(0, 0)), QPointF(100, 50));  // where Fritzing put it
+		QVERIFY(!s.warnings.join(' ').contains("laid out"));
 	}
 };
 

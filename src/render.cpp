@@ -266,7 +266,8 @@ void restyleElement(QDomElement e, const Theme & t, Symbol kind) {
 
 	if (isText) {
 		e.setAttribute("font-family", t.font);
-		if (e.hasAttribute("font-size")) e.setAttribute("font-size", QString::number(number(e.attribute("font-size"), 0) * t.textScale));
+		// a net label's box is sized to its text: that keeps its size
+		if (e.hasAttribute("font-size") && kind != Symbol::NetLabel) e.setAttribute("font-size", QString::number(number(e.attribute("font-size"), 0) * t.textScale));
 		QString fill = fillTone == Tone::Grey ? t.pinText : t.ink;
 		if (fillTone == Tone::Other && e.hasAttribute("fill")) fill = e.attribute("fill");
 		if (kind == Symbol::NetLabel) {
@@ -396,6 +397,20 @@ QString connectorList(const LoadedPart & lp) {
 }
 
 }  // namespace
+
+QTransform partToScene(const sketch::PartSpec & spec, const LoadedPart & lp) {
+	return placement(spec, lp.size);
+}
+
+QHash<QString, QPointF> sceneConnectors(const sketch::PartSpec & spec, const LoadedPart & lp) {
+	const QTransform t = placement(spec, lp.size);
+	QHash<QString, QPointF> out;
+	for (const ConnectorPoint & c : lp.connectors) {
+		if (!c.found) continue;
+		out.insert(c.id, t.map(c.leg.isNull() ? c.local : legOf(c, spec).points.last()));
+	}
+	return out;
+}
 
 LoadedPart loadPart(const QString & fzpPath, const QString & view) {
 	LoadedPart lp;
@@ -667,6 +682,7 @@ Result renderSketch(const sketch::Sketch & sk, const QStringList & roots, const 
 
 	result.svg = out;
 	result.size = bounds.size();
+	result.origin = bounds.topLeft();
 	return result;
 }
 

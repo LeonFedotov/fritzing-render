@@ -46,6 +46,17 @@ QList<Connector> readConnectors(const QDomElement & root) {
 	return out;
 }
 
+QList<QStringList> readBuses(const QDomElement & root) {
+	QList<QStringList> out;
+	const QDomElement list = root.firstChildElement("buses");
+	for (QDomElement b = list.firstChildElement("bus"); !b.isNull(); b = b.nextSiblingElement("bus")) {
+		QStringList members;
+		for (QDomElement m = b.firstChildElement("nodeMember"); !m.isNull(); m = m.nextSiblingElement("nodeMember")) members << m.attribute("connectorId");
+		if (members.size() > 1) out << members;
+	}
+	return out;
+}
+
 }  // namespace
 
 // The bytes less the control characters XML forbids (all below 0x20 but
@@ -82,6 +93,7 @@ Part read(const QString & path) {
 	}
 	part.views = readViews(root);
 	part.connectors = readConnectors(root);
+	part.buses = readBuses(root);
 	part.ok = true;
 	return part;
 }
