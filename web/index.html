@@ -23,13 +23,29 @@
 
   <main class="wrap">
     <section id="yours">
-      <h2>Your sketch</h2>
+      <h2>Your sketch and parts</h2>
       <label id="drop" class="drop">
-        <input id="file" type="file" accept=".fzz,.fz,.json" hidden>
-        <strong>Drop a Fritzing <code>.fzz</code></strong> (or a <code>.fz</code>, or a JSON sketch) here, or click to choose one.
-        <span class="hint">It stays in your browser. Parts from the libraries it uses are fetched by module id, so the file doesn't have to bundle them.</span>
+        <input id="file" type="file" accept=".fzz,.fz,.json,.fzpz,.fzp,.svg" multiple hidden>
+        <strong>Drop a Fritzing <code>.fzz</code></strong> (or a <code>.fz</code>, or a JSON sketch) to draw it,
+        and <strong>parts</strong> (<code>.fzpz</code>, or a <code>.fzp</code> with its <code>.svg</code> drawings) to add them to your parts. Or click to choose files.
+        <span class="hint">Everything stays in your browser. A sketch gets library parts by module id, so it needn't bundle them; your parts are kept here for next time and win over a library's copy.</span>
       </label>
+      <p id="drop-note" class="note"></p>
       <div id="yours-out"></div>
+      <h3 class="sub">Your parts</h3>
+      <p id="user-parts-empty" class="hint">None yet. Dropped parts show up here and in the catalogue.</p>
+      <div id="user-parts" class="parts"></div>
+    </section>
+
+    <section id="catalogue">
+      <h2>Parts catalogue</h2>
+      <div class="search">
+        <input id="q" type="search" placeholder="Search every part: try “esp32 s3”, “74ls”, “grove”, “oled 128x64”…" autocomplete="off" spellcheck="false">
+        <span id="count" class="hint"></span>
+      </div>
+      <p class="hint">Searches titles, module ids, families, tags and file names across all libraries. Only the results on screen are fetched and drawn.</p>
+      <div id="results" class="parts"></div>
+      <button id="more" class="more" hidden>Show more</button>
     </section>
 
     <section>

@@ -94,6 +94,8 @@ def index(cli):
             skipped += 1
             continue
         e = {'t': p['title'], 'm': p['moduleId'], 'f': p['family'], 'r': root, 'p': p['fzp']}
+        if p['tags']:
+            e['g'] = ' '.join(p['tags'])
         if p['breadboard']:
             e['b'] = p['breadboard']
         if p['schematic']:

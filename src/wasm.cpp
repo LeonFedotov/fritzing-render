@@ -2,6 +2,9 @@
 // loads the parts a sketch needs into the virtual file system under /parts
 // (the same layout as vendor/), then asks for the drawing.
 //
+// Parts the person adds on the page live in /parts/user-parts, searched
+// before the libraries, so their copy of a part wins.
+//
 //   modules(bytes)              -> JSON array: the parts the sketch names
 //                                  (module ids for .fzz/.fz, part refs for JSON)
 //   render(bytes, view, theme)  -> JSON {svg, width, height, warnings, error}
@@ -32,6 +35,10 @@ QByteArray bytesOf(const std::string & s) {
 	return QByteArray(s.data(), static_cast<qsizetype>(s.size()));
 }
 
+QStringList roots() {
+	return QStringList{QStringLiteral("/parts/user-parts")} + partlib::defaultRoots();
+}
+
 std::string json(const QJsonDocument & doc) {
 	return doc.toJson(QJsonDocument::Compact).toStdString();
 }
@@ -52,7 +59,7 @@ std::string listModules(const std::string & input) {
 std::string renderBytes(const std::string & input, const std::string & viewName, const std::string & theme) {
 	const QByteArray data = bytesOf(input);
 	const QString view = viewName == "schematic" ? sketch::SchematicView : sketch::BreadboardView;
-	const QStringList roots = partlib::defaultRoots();
+	const QStringList roots = ::roots();
 	QStringList warnings;
 	render::Result r;
 	if (fzz::detect(data) == fzz::Format::Json) {

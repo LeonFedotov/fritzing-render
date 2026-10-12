@@ -123,7 +123,12 @@ docker run --rm -v "$PWD:/work" ghcr.io/leonfedotov/fritzing-render render blink
 
 **[leonfedotov.github.io/fritzing-render](https://leonfedotov.github.io/fritzing-render/)**
 renders the examples live and any `.fzz`, `.fz` or JSON sketch you drop on
-it, in both views and both themes, with SVG and PNG downloads. The renderer
+it, in both views and both themes, with SVG and PNG downloads. Drop parts on
+it too (`.fzpz`, or a `.fzp` with its `.svg` drawings): they're kept in your
+browser and any sketch can use them. A parts catalogue searches every part
+of every library (title, module id, family, tags, file name) and draws
+previews only for the results on screen, with the line to paste into a
+sketch. The renderer
 is compiled to WebAssembly with Qt for WebAssembly (`src/wasm.cpp`); the page
 (`web/`) loads a parts index of every library here (`fritzing-render index`,
 mapped to each library's GitHub repository at the commit this checkout pins)
