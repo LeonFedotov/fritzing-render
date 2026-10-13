@@ -24,6 +24,8 @@
   }
 }
 * { box-sizing: border-box; }
+/* hidden means hidden, whatever display a class gives */
+[hidden] { display: none !important; }
 body {
   margin: 0;
   background: var(--bg);
@@ -91,7 +93,6 @@ code { font-size: 0.92em; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .spacer { flex: 1; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.seg[hidden] { display: none; }
 .seg button, .link {
   font: inherit;
   font-size: 0.85rem;
@@ -214,7 +215,6 @@ body.app { height: 100vh; display: flex; flex-direction: column; overflow: hidde
 .empty { position: absolute; inset: 0; margin: auto; height: fit-content; max-width: 420px; text-align: center; color: var(--muted); pointer-events: none; }
 .empty a { pointer-events: auto; }
 .inspector { position: absolute; top: 12px; right: 12px; width: 240px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08); font-size: 0.88rem; }
-.inspector[hidden] { display: none; }
 .inspector .title { margin: 0; font-weight: 600; }
 .inspector label { display: flex; flex-direction: column; gap: 2px; color: var(--muted); font-size: 0.8rem; }
 .inspector input { font: inherit; font-size: 0.88rem; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); }
@@ -239,6 +239,5 @@ body.app { height: 100vh; display: flex; flex-direction: column; overflow: hidde
   color: var(--accent);
   cursor: pointer;
 }
-.more[hidden] { display: none; }
 
 footer { color: var(--muted); font-size: 0.85rem; padding-top: 32px; padding-bottom: 40px; }
