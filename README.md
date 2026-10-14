@@ -137,7 +137,10 @@ has three pages:
   its `.svg` drawings) are kept in your browser, and any sketch can use them.
 - **Editor**: a new JSON sketch, or an example opened from its card. Find
   parts on the left and click to add them; drag parts to move them, and drag
-  from one pin to another to wire them. You can choose wire colours, rotate,
+  from one pin to another to wire them. Drag a wire to bend it: each bend is
+  a joint (its `via` points) that stays put when you move the parts, so only
+  the segments to their pins follow. Double-click a wire to add a joint, a
+  joint to remove it. You can choose wire colours, rotate,
   rename, label, undo, download the JSON, and render the result in either
   view. The sketch is kept in your browser between visits.
 
@@ -262,6 +265,7 @@ scripts/fetch-vendor.sh                 # svgpp, fritzing-parts, the unpacked li
 cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/qt
 cmake --build build -j
 (cd build && ctest)
+node --test web/test/                   # the web editor's wire geometry
 ```
 
 ## CLI

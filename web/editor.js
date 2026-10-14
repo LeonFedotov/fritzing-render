@@ -1,12 +1,15 @@
 // The sketch editor: a JSON sketch (src/sketch.h) on a canvas. Parts come
 // from the catalogue search; drag a part to move it, drag from one pin to
-// another to wire them. Each part is drawn by the renderer on its own, so
+// another to wire them. Drag a wire to bend it: each bend is a joint that
+// stays put when the parts move (double-click a wire to add one, a joint to
+// remove it). Each part is drawn by the renderer on its own, so
 // the canvas shows Fritzing's drawings; "Render" draws the whole sketch,
 // breadboard or schematic. The sketch is kept in this browser between visits.
 //
 //   editor.html?add=<part ref>        adds a part to the sketch
 //   editor.html?open=<sketch.json>    opens a sketch (an example, say)
 
+import { insertJoint, moveJoint, removeJoint } from './wires.js'
 import { card, describe, download, encodeSketch, fetchBytes, libName, partHref, ready, refOf, renderBytes, resolve, search, userPartFor, userEntry } from './lib.js'
 
 const $ = s => document.querySelector(s)
@@ -36,7 +39,7 @@ function stored() {
 }
 
 let sketch = stored() ?? { parts: [], wires: [] }
-let selection = null   // {part: id} or {wire: index}
+let selection = null   // {part: id}, {wire: index} or {wire: index, joint: index}
 let color = 'blue'
 const undoStack = []
 
@@ -133,6 +136,14 @@ function endAt(end) {
   return c ? toScene(spec, lk, [c.x, c.y]) : null
 }
 
+// A wire's ends and joints, in order; null while a part it ends on is loading.
+function wirePath(w) {
+  const pts = [endAt(w.from), ...(w.via ?? []), endAt(w.to)]
+  return pts.some(p => !p) ? null : pts
+}
+
+const snap = ([x, y]) => [Math.round(x / SNAP) * SNAP, Math.round(y / SNAP) * SNAP]
+
 const wireTouches = (w, id) => [w.from, w.to].some(e => (typeof e === 'string' && e.startsWith(id + '.')) || e?.part === id)
 
 // --- the canvas ---------------------------------------------------------------------
@@ -210,14 +221,18 @@ function draw() {
     }
   }
   sketch.wires.forEach((w, i) => {
-    const pts = [endAt(w.from), ...(w.via ?? []), endAt(w.to)]
-    if (pts.some(p => !p)) return
+    const pts = wirePath(w)
+    if (!pts) return
     const points = pts.map(p => p.join(',')).join(' ')
     const stroke = COLORS[w.color ?? 'blue'] ?? w.color ?? COLORS.blue
     const g = el('g', { class: 'wire' + (selection?.wire === i ? ' selected' : ''), 'data-index': i }, wiresLayer)
     el('polyline', { points, class: 'hit' }, g)
     el('polyline', { points, class: 'shadow' }, g)
     el('polyline', { points, stroke, class: 'line' }, g)
+    ;(w.via ?? []).forEach(([x, y], j) => {
+      const on = selection?.wire === i && selection.joint === j
+      el('circle', { class: 'joint' + (on ? ' selected' : ''), cx: x, cy: y, r: 1.6, fill: stroke, 'data-joint': j }, g)
+    })
   })
   inspector()
   $('#rotate').disabled = !selection?.part
@@ -255,6 +270,10 @@ function deleteSelection() {
     if (selection.part) {
       sketch.wires = sketch.wires.filter(w => !wireTouches(w, selection.part))
       sketch.parts = sketch.parts.filter(p => p.id !== selection.part)
+    } else if (selection.joint !== undefined) {
+      const w = sketch.wires[selection.wire]
+      w.via = removeJoint(w.via, selection.joint)
+      if (!w.via.length) delete w.via
     } else {
       sketch.wires.splice(selection.wire, 1)
     }
@@ -267,7 +286,6 @@ function rotateSelection() {
   if (!spec) return
   change(() => {
     spec.rotate = ((spec.rotate ?? 0) + 90) % 360
-    for (const w of sketch.wires) if (wireTouches(w, spec.id)) delete w.via
   })
 }
 
@@ -313,9 +331,18 @@ function inspector() {
     else details.hidden = true
     if (lk?.connectors) box.querySelector('.pins').textContent = `${lk.connectors.length} pins`
   } else if (wire) {
-    box.innerHTML = '<p class="title">Wire</p><p class="hint ends"></p><div class="swatches"></div>'
+    box.innerHTML = `<p class="title">Wire</p><p class="hint ends"></p><div class="swatches"></div>
+      <p class="row"><span class="hint joints"></span><button class="link straighten">Straighten</button></p>
+      <p class="hint">Drag the wire to bend it. Double-click the wire to add a joint, a joint to remove it.</p>`
     const name = e => typeof e === 'string' ? e : Array.isArray(e) ? `(${e.join(', ')})` : `${e.part}@(${e.at.join(', ')})`
     box.querySelector('.ends').textContent = `${name(wire.from)} → ${name(wire.to)}`
+    const n = wire.via?.length ?? 0
+    box.querySelector('.joints').textContent = n === 1 ? '1 joint' : `${n} joints`
+    box.querySelector('.straighten').hidden = !n
+    box.querySelector('.straighten').onclick = () => change(() => {
+      delete wire.via
+      selection = { wire: selection.wire }
+    })
     swatches(box.querySelector('.swatches'), wire.color ?? 'blue', c => change(() => { wire.color = c }))
   }
 }
@@ -343,6 +370,39 @@ pickColor('blue')
 
 let drag = null
 
+// Double-clicks are told apart here: each press redraws the canvas, so the
+// browser's click and dblclick never fire.
+let lastPress = null
+
+function isDouble(e) {
+  const last = lastPress
+  lastPress = { t: e.timeStamp, x: e.clientX, y: e.clientY }
+  if (!last || e.timeStamp - last.t > 400 || Math.hypot(e.clientX - last.x, e.clientY - last.y) > 5) return false
+  lastPress = null
+  return true
+}
+
+// A double-click on a wire adds a joint there; on a joint, removes it.
+function doubleClick(wire, joint, at) {
+  const i = Number(wire.dataset.index)
+  const w = sketch.wires[i]
+  if (joint) {
+    change(() => {
+      w.via = removeJoint(w.via, Number(joint.dataset.joint))
+      if (!w.via.length) delete w.via
+      selection = { wire: i }
+    })
+  } else {
+    const path = wirePath(w)
+    if (!path) return
+    change(() => {
+      const { via, joint: j } = insertJoint(w.via, path, snap(at))
+      w.via = via
+      selection = { wire: i, joint: j }
+    })
+  }
+}
+
 canvas.addEventListener('pointerdown', e => {
   if (e.button !== 0) return
   const at = scenePoint(e)
@@ -350,6 +410,10 @@ canvas.addEventListener('pointerdown', e => {
   const wire = e.target.closest('.wire')
   const part = e.target.closest('.part')
   canvas.setPointerCapture(e.pointerId)
+  if (isDouble(e) && wire && !pin) {
+    drag = null
+    return doubleClick(wire, e.target.closest('.joint'), at)
+  }
   if (pin) {
     const start = [Number(pin.getAttribute('cx')), Number(pin.getAttribute('cy'))]
     drag = { kind: 'wire', from: pin.dataset.end, start }
@@ -358,7 +422,17 @@ canvas.addEventListener('pointerdown', e => {
     temp.setAttribute('visibility', 'visible')
     canvas.classList.add('wiring')
   } else if (wire) {
-    selection = { wire: Number(wire.dataset.index) }
+    const i = Number(wire.dataset.index)
+    const joint = e.target.closest('.joint')
+    if (joint) {
+      // drag a joint about
+      selection = { wire: i, joint: Number(joint.dataset.joint) }
+      drag = { kind: 'joint', wire: i, joint: selection.joint, moved: false }
+    } else {
+      // dragging the wire bends it: a new joint where it was grabbed
+      selection = { wire: i }
+      drag = { kind: 'bend', wire: i, at, client: [e.clientX, e.clientY] }
+    }
     draw()
   } else if (part) {
     const spec = partById(part.dataset.id)
@@ -378,15 +452,36 @@ canvas.addEventListener('pointermove', e => {
     const [x, y] = scenePoint(e)
     temp.setAttribute('x2', x)
     temp.setAttribute('y2', y)
+  } else if (drag.kind === 'bend') {
+    if (Math.hypot(e.clientX - drag.client[0], e.clientY - drag.client[1]) < 4) return
+    const w = sketch.wires[drag.wire]
+    const path = wirePath(w)
+    if (!path) return
+    undoStack.push(JSON.stringify(sketch))
+    const { via, joint } = insertJoint(w.via, path, snap(scenePoint(e)))
+    w.via = via
+    selection = { wire: drag.wire, joint }
+    drag = { kind: 'joint', wire: drag.wire, joint, moved: true }
+    draw()
+  } else if (drag.kind === 'joint') {
+    const w = sketch.wires[drag.wire]
+    const p = snap(scenePoint(e))
+    const old = w.via[drag.joint]
+    if (p[0] === old[0] && p[1] === old[1]) return
+    if (!drag.moved) {
+      undoStack.push(JSON.stringify(sketch))
+      drag.moved = true
+    }
+    w.via = moveJoint(w.via, drag.joint, p)
+    draw()
   } else if (drag.kind === 'move') {
     const [x, y] = scenePoint(e)
     const nx = Math.round((drag.x + x - drag.at[0]) / SNAP) * SNAP
     const ny = Math.round((drag.y + y - drag.at[1]) / SNAP) * SNAP
     if (nx === drag.spec.x && ny === drag.spec.y) return
     if (!drag.moved) {
-      // one undo step per move; bends in its wires no longer fit
+      // one undo step per move; its wires' joints stay where they are
       undoStack.push(JSON.stringify(sketch))
-      for (const w of sketch.wires) if (wireTouches(w, drag.spec.id)) delete w.via
       drag.moved = true
     }
     drag.spec.x = nx
@@ -406,7 +501,7 @@ canvas.addEventListener('pointerup', e => {
     const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.pin')
     const to = target?.dataset.end
     if (to && to !== drag.from) change(() => sketch.wires.push({ from: drag.from, to, color }))
-  } else if (drag?.kind === 'move' && drag.moved) {
+  } else if ((drag?.kind === 'move' || drag?.kind === 'joint') && drag.moved) {
     persist()
   }
   drag = null

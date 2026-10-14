@@ -123,7 +123,7 @@ def main():
     args = ap.parse_args()
     out = Path(args.out)
     shutil.rmtree(out, ignore_errors=True)
-    shutil.copytree(ROOT / 'web', out)
+    shutil.copytree(ROOT / 'web', out, ignore=shutil.ignore_patterns('test'))
     for f in ['fritzing-render-web.js', 'fritzing-render-web.wasm', 'fritzing-render-web.data', 'qtloader.js']:
         shutil.copy(Path(args.wasm) / f, out / f)
     shutil.copytree(ROOT / 'examples', out / 'examples', ignore=shutil.ignore_patterns('*.png', '*.svg'))

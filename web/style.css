@@ -211,6 +211,9 @@ body.app { height: 100vh; display: flex; flex-direction: column; overflow: hidde
 #canvas .wire .shadow { stroke: rgba(15, 23, 42, 0.35); stroke-width: 3.6; }
 #canvas .wire .line { stroke-width: 2; }
 #canvas .wire.selected .shadow { stroke: #2563eb; stroke-width: 5; }
+#canvas .wire .joint { stroke: rgba(15, 23, 42, 0.45); stroke-width: 0.5; cursor: move; }
+#canvas .wire.selected .joint { r: 2.6; fill: #fff; stroke: #2563eb; stroke-width: 1; }
+#canvas .wire.selected .joint.selected { fill: #2563eb; }
 #canvas .temp { pointer-events: none; }
 .empty { position: absolute; inset: 0; margin: auto; height: fit-content; max-width: 420px; text-align: center; color: var(--muted); pointer-events: none; }
 .empty a { pointer-events: auto; }
